@@ -32,13 +32,13 @@ export default function SlotsPage() {
     fetchAll(role, teacherId);
   }, []);
 
-  const fetchAll = async (role?: string, teacherId?: string) => {
+  const fetchAll = async (role?: string, teacherId?: string | null) => {
     const r = role ?? myRole;
     const t = teacherId ?? myTeacherId;
     await Promise.all([fetchSlots(r, t), fetchApprovedConsultations(r, t)]);
   };
 
-  const fetchSlots = async (role: string, teacherId: string) => {
+  const fetchSlots = async (role: string, teacherId: string | null) => {
     // 부원장이면 본인 teacher_id 슬롯만 조회
     const filter = role === 'vice_director' && teacherId
       ? `&teacher_id=eq.${teacherId}`
@@ -57,7 +57,7 @@ export default function SlotsPage() {
   };
 
   // 승인된 예약의 reserved_at 목록 가져오기 (이 시간은 슬롯 삭제 불가)
-  const fetchApprovedConsultations = async (role: string, teacherId: string) => {
+  const fetchApprovedConsultations = async (role: string, teacherId: string | null) => {
     // 부원장이면 본인 teacher_id 상담만 조회
     const filter = role === 'vice_director' && teacherId
       ? `&teacher_id=eq.${teacherId}`
