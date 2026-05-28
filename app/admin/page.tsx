@@ -1,0 +1,132 @@
+'use client';
+
+import { useEffect, useState } from 'react';
+import { useRouter } from 'next/navigation';
+
+export default function AdminPage() {
+  const [user, setUser] = useState<any>(null);
+  const [role, setRole] = useState<string>('director');
+  const router = useRouter();
+
+  useEffect(() => {
+    const token = localStorage.getItem('sb_access_token');
+    const userData = localStorage.getItem('sb_user');
+    const savedRole = localStorage.getItem('sb_role') || 'director';
+
+    if (!token) {
+      router.push('/login');
+      return;
+    }
+    // 일반 선생님은 /admin/teacher 로 이동
+    if (savedRole === 'teacher') {
+      router.push('/admin/teacher');
+      return;
+    }
+    setRole(savedRole);
+    if (userData) setUser(JSON.parse(userData));
+  }, []);
+
+  const handleLogout = () => {
+    localStorage.removeItem('sb_access_token');
+    localStorage.removeItem('sb_user');
+    localStorage.removeItem('sb_role');
+    localStorage.removeItem('sb_teacher_id');
+    router.push('/login');
+  };
+
+  if (!user) return null;
+
+  return (
+    <main className="min-h-screen bg-gray-50">
+      {/* 상단 네비 */}
+      <nav className="bg-blue-700 text-white px-6 py-4 flex justify-between items-center">
+        <h1 className="text-xl font-bold">⭐ 스카이 관리자</h1>
+        <div className="flex items-center gap-6">
+          <span className="text-sm text-blue-200">{user.email}</span>
+          <button
+            onClick={handleLogout}
+            className="bg-white text-blue-700 px-4 py-1 rounded-full text-sm font-bold hover:bg-blue-50"
+          >
+            로그아웃
+          </button>
+        </div>
+      </nav>
+
+      {/* 메뉴 카드 */}
+      <div className="max-w-4xl mx-auto py-16 px-6">
+        <h2 className="text-2xl font-bold text-gray-800 mb-10">관리자 메뉴</h2>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          {/* 신규생 상담 관리: 원장/부원장만 */}
+          {role !== 'teacher' && (
+            <a
+              href="/admin/consultations/new"
+              className="bg-white rounded-2xl shadow-sm border border-gray-100 p-8 hover:shadow-md transition"
+            >
+              <div className="text-4xl mb-4">📋</div>
+              <h3 className="text-xl font-bold text-gray-800 mb-2">
+                신규생 상담 관리
+              </h3>
+              <p className="text-gray-500 text-sm">
+                신규 상담 신청 확인 및 승인/거절
+              </p>
+            </a>
+          )}
+
+          <a
+            href="/admin/consultations/current"
+            className="bg-white rounded-2xl shadow-sm border border-gray-100 p-8 hover:shadow-md transition"
+          >
+            <div className="text-4xl mb-4">💬</div>
+            <h3 className="text-xl font-bold text-gray-800 mb-2">
+              재원생 상담 관리
+            </h3>
+            <p className="text-gray-500 text-sm">재원생 상담 신청 전체 현황</p>
+          </a>
+
+          <a
+            href="/admin/students"
+            className="bg-white rounded-2xl shadow-sm border border-gray-100 p-8 hover:shadow-md transition"
+          >
+            <div className="text-4xl mb-4">👨‍🎓</div>
+            <h3 className="text-xl font-bold text-gray-800 mb-2">학생 관리</h3>
+            <p className="text-gray-500 text-sm">학생 등록 및 정보 관리</p>
+          </a>
+
+          <a
+            href="/admin/students/logs"
+            className="bg-white rounded-2xl shadow-sm border border-gray-100 p-8 hover:shadow-md transition"
+          >
+            <div className="text-4xl mb-4">📓</div>
+            <h3 className="text-xl font-bold text-gray-800 mb-2">학생 일지</h3>
+            <p className="text-gray-500 text-sm">수업 일지 및 진도 관리</p>
+          </a>
+
+          {/* 선생님 관리: 원장/부원장만 */}
+          {role !== 'teacher' && (
+            <a
+              href="/admin/teachers"
+              className="bg-white rounded-2xl shadow-sm border border-gray-100 p-8 hover:shadow-md transition"
+            >
+              <div className="text-4xl mb-4">👩‍🏫</div>
+              <h3 className="text-xl font-bold text-gray-800 mb-2">
+                선생님 관리
+              </h3>
+              <p className="text-gray-500 text-sm">선생님 등록 및 계정 관리</p>
+            </a>
+          )}
+
+          <a
+            href="/admin/slots"
+            className="bg-white rounded-2xl shadow-sm border border-gray-100 p-8 hover:shadow-md transition"
+          >
+            <div className="text-4xl mb-4">🗓️</div>
+            <h3 className="text-xl font-bold text-gray-800 mb-2">
+              상담 시간 설정
+            </h3>
+            <p className="text-gray-500 text-sm">신규생·재원생 상담 시간 오픈</p>
+          </a>
+        </div>
+      </div>
+    </main>
+  );
+}

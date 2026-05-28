@@ -1,0 +1,82 @@
+export const dynamic = 'force-dynamic';
+
+export default async function TeachersPage() {
+  const res = await fetch(
+    `${process.env.NEXT_PUBLIC_SUPABASE_URL}/rest/v1/teachers?select=*&order=sort_order.asc`,
+    {
+      headers: {
+        apikey: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+        Authorization: `Bearer ${process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!}`,
+      },
+      cache: 'no-store',
+    },
+  );
+
+  const teachers = await res.json();
+  console.log('teachers data:', teachers);
+
+  return (
+    <main className="min-h-screen bg-white">
+      <nav className="bg-blue-700 text-white px-6 py-4 flex justify-between items-center">
+        <h1 className="text-xl font-bold">⭐ 스카이수학과학입시학원</h1>
+        <div className="flex gap-6 text-sm">
+          <a href="/" className="hover:underline">
+            홈
+          </a>
+          <a href="/teachers" className="hover:underline">
+            선생님 소개
+          </a>
+          <a href="/consultation" className="hover:underline">
+            상담 신청
+          </a>
+        </div>
+      </nav>
+
+      <section className="max-w-5xl mx-auto py-16 px-6">
+        <h2 className="text-3xl font-bold text-center mb-12 text-gray-800">
+          선생님 소개
+        </h2>
+
+        {teachers && teachers.length > 0 ? (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+            {teachers.map((teacher: any) => (
+              <div
+                key={teacher.id}
+                className="bg-white rounded-xl shadow-md overflow-hidden border border-gray-100"
+              >
+                {teacher.photo_url ? (
+                  <img
+                    src={teacher.photo_url}
+                    alt={teacher.name}
+                    className="w-full h-48 object-cover"
+                  />
+                ) : (
+                  <div className="w-full h-48 bg-blue-100 flex items-center justify-center text-6xl">
+                    👩‍🏫
+                  </div>
+                )}
+                <div className="p-6">
+                  <h3 className="text-xl font-bold text-gray-800 mb-1">
+                    {teacher.name}
+                  </h3>
+                  <p className="text-blue-600 font-medium mb-3">
+                    {teacher.subject}
+                  </p>
+                  <p className="text-gray-600 text-sm">{teacher.bio}</p>
+                </div>
+              </div>
+            ))}
+          </div>
+        ) : (
+          <p className="text-center text-gray-500">
+            등록된 선생님이 없습니다. ({JSON.stringify(teachers)})
+          </p>
+        )}
+      </section>
+
+      <footer className="bg-gray-800 text-gray-400 text-center py-8">
+        <p>© 2026 스카이수학과학입시학원 | 문의: 010-5606-3041</p>
+      </footer>
+    </main>
+  );
+}

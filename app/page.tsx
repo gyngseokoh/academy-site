@@ -1,65 +1,104 @@
-import Image from "next/image";
+import Link from 'next/link';
 
 export default function Home() {
   return (
-    <div className="flex flex-col flex-1 items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex flex-1 w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the page.tsx file.
-          </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
-          </p>
+    <main className="min-h-screen bg-white">
+      {/* 네비게이션 */}
+      <nav className="bg-blue-700 text-white px-6 py-4 flex justify-between items-center">
+        <h1 className="text-xl font-bold">⭐ 스카이수학과학입시학원</h1>
+        <div className="flex gap-6 text-sm">
+          <Link href="/" className="hover:underline">홈</Link>
+          <Link href="/teachers" className="hover:underline">선생님 소개</Link>
+          <Link href="/consultation" className="hover:underline">신규생 상담</Link>
+          <Link href="/consultation/current" className="hover:underline">재원생 상담</Link>
         </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
+      </nav>
+
+      {/* 히어로 섹션 */}
+      <section className="bg-blue-700 text-white text-center py-24 px-6">
+        <h2 className="text-4xl font-bold mb-4">
+          최고의 교육, 스카이수학과학입시학원
+        </h2>
+        <p className="text-xl mb-10 text-blue-100">
+          학생 한 명 한 명을 소중히 생각하는 학원입니다
+        </p>
+        <div className="flex gap-4 justify-center flex-wrap">
+          <Link
+            href="/consultation"
+            className="bg-white text-blue-700 font-bold px-8 py-3 rounded-full hover:bg-blue-50 transition"
           >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={16}
-            />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
+            신규생 상담 신청
+          </Link>
+          <Link
+            href="/consultation/current"
+            className="bg-blue-600 text-white font-bold px-8 py-3 rounded-full border-2 border-white hover:bg-blue-500 transition"
           >
-            Documentation
-          </a>
+            재원생 상담 신청
+          </Link>
         </div>
-      </main>
-    </div>
+      </section>
+
+      {/* 상담 안내 섹션 */}
+      <section className="py-16 px-6 max-w-4xl mx-auto">
+        <h3 className="text-2xl font-bold text-center mb-10 text-gray-800">
+          상담 안내
+        </h3>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <Link
+            href="/consultation"
+            className="border-2 border-blue-100 rounded-2xl p-8 hover:border-blue-400 hover:shadow-md transition"
+          >
+            <div className="text-4xl mb-4">🎓</div>
+            <h4 className="font-bold text-xl text-gray-800 mb-2">신규생 상담</h4>
+            <p className="text-gray-500 text-sm">
+              원장 선생님과 1:1 입학 상담을 예약하세요.<br />
+              학생 수준 파악 및 수업 방향을 안내해드립니다.
+            </p>
+            <span className="mt-4 inline-block text-blue-600 text-sm font-bold">상담 신청하기 →</span>
+          </Link>
+          <Link
+            href="/consultation/current"
+            className="border-2 border-blue-100 rounded-2xl p-8 hover:border-blue-400 hover:shadow-md transition"
+          >
+            <div className="text-4xl mb-4">💬</div>
+            <h4 className="font-bold text-xl text-gray-800 mb-2">재원생 상담</h4>
+            <p className="text-gray-500 text-sm">
+              담당 선생님과 개별 상담을 예약하세요.<br />
+              학습 진도, 성적 관리 등을 상담할 수 있습니다.
+            </p>
+            <span className="mt-4 inline-block text-blue-600 text-sm font-bold">상담 신청하기 →</span>
+          </Link>
+        </div>
+      </section>
+
+      {/* 특징 섹션 */}
+      <section className="py-16 px-6 max-w-4xl mx-auto bg-gray-50 rounded-3xl mb-10">
+        <h3 className="text-2xl font-bold text-center mb-10 text-gray-800">
+          스카이수학과학입시학원의 특징
+        </h3>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+          <div className="text-center p-6 rounded-xl bg-white">
+            <div className="text-4xl mb-4">👨‍🏫</div>
+            <h4 className="font-bold text-lg mb-2">전문 선생님</h4>
+            <p className="text-gray-600 text-sm">풍부한 경험을 가진 전문 강사진</p>
+          </div>
+          <div className="text-center p-6 rounded-xl bg-white">
+            <div className="text-4xl mb-4">📚</div>
+            <h4 className="font-bold text-lg mb-2">맞춤형 교육</h4>
+            <p className="text-gray-600 text-sm">학생 수준에 맞는 개인별 맞춤 지도</p>
+          </div>
+          <div className="text-center p-6 rounded-xl bg-white">
+            <div className="text-4xl mb-4">📈</div>
+            <h4 className="font-bold text-lg mb-2">성적 향상</h4>
+            <p className="text-gray-600 text-sm">체계적인 관리로 확실한 성과</p>
+          </div>
+        </div>
+      </section>
+
+      {/* 푸터 */}
+      <footer className="bg-gray-800 text-gray-400 text-center py-8">
+        <p>© 2026 스카이수학과학입시학원 | 문의: 010-5606-3041</p>
+      </footer>
+    </main>
   );
 }
