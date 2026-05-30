@@ -12,6 +12,10 @@ export default function ConsultationPage() {
     applicant_name: '',
     phone: '',
     content: '',
+    school: '',
+    grade: '',
+    subject: '',
+    consultation_type: '',
   });
   const [step, setStep] = useState<'calendar' | 'form' | 'done'>('calendar');
   const [loading, setLoading] = useState(false);
@@ -84,12 +88,16 @@ export default function ConsultationPage() {
 
   return (
     <main className="min-h-screen bg-white">
-      <nav className="bg-blue-700 text-white px-6 py-4 flex justify-between items-center">
-        <h1 className="text-xl font-bold"><img src="/logo.png" alt="SKY" className="h-9 w-9 object-contain inline-block" /> 스카이수학과학입시학원</h1>
-        <div className="flex gap-6 text-sm">
-          <a href="/" className="hover:underline">홈</a>
-          <a href="/teachers" className="hover:underline">선생님 소개</a>
-          <a href="/consultation" className="hover:underline">상담 신청</a>
+      <nav className="bg-blue-900 text-white px-6 py-4 flex justify-between items-center sticky top-0 z-50 shadow-md">
+        <a href="/" className="flex items-center gap-2">
+          <img src="/logo.png" alt="SKY" className="h-9 w-9 object-contain" />
+          <span className="text-lg font-bold hidden sm:block">스카이수학과학입시학원</span>
+        </a>
+        <div className="flex gap-5 text-sm font-medium">
+          <a href="/schools" className="hover:text-blue-300 transition">학교 분석</a>
+          <a href="/teachers" className="hover:text-blue-300 transition">선생님 소개</a>
+          <a href="/consultation" className="text-yellow-300 font-bold">신규생 상담</a>
+          <a href="/consultation/current" className="hover:text-blue-300 transition">재원생 상담</a>
         </div>
       </nav>
 
@@ -245,53 +253,80 @@ export default function ConsultationPage() {
             </div>
 
             <form onSubmit={handleSubmit} className="space-y-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  신청자 이름 *
-                </label>
-                <input
-                  type="text"
-                  required
-                  value={form.applicant_name}
-                  onChange={(e) =>
-                    setForm({ ...form, applicant_name: e.target.value })
-                  }
-                  className="w-full border border-gray-300 rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  placeholder="홍길동"
-                />
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">신청자 이름 *</label>
+                  <input type="text" required value={form.applicant_name}
+                    onChange={(e) => setForm({ ...form, applicant_name: e.target.value })}
+                    className="w-full border border-gray-300 rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    placeholder="홍길동" />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">연락처 *</label>
+                  <input type="tel" required value={form.phone}
+                    onChange={(e) => setForm({ ...form, phone: e.target.value })}
+                    className="w-full border border-gray-300 rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    placeholder="010-0000-0000" />
+                </div>
+              </div>
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">학교명</label>
+                  <input type="text" value={form.school}
+                    onChange={(e) => setForm({ ...form, school: e.target.value })}
+                    className="w-full border border-gray-300 rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    placeholder="선유고, 당산중 등" />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">학년</label>
+                  <select value={form.grade} onChange={(e) => setForm({ ...form, grade: e.target.value })}
+                    className="w-full border border-gray-300 rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                    <option value="">선택</option>
+                    <optgroup label="중학교">
+                      <option value="중1">중1</option>
+                      <option value="중2">중2</option>
+                      <option value="중3">중3</option>
+                    </optgroup>
+                    <optgroup label="고등학교">
+                      <option value="고1">고1</option>
+                      <option value="고2">고2</option>
+                      <option value="고3">고3</option>
+                    </optgroup>
+                  </select>
+                </div>
+              </div>
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">희망 과목</label>
+                  <select value={form.subject} onChange={(e) => setForm({ ...form, subject: e.target.value })}
+                    className="w-full border border-gray-300 rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                    <option value="">선택</option>
+                    <option value="수학">수학</option>
+                    <option value="과학">과학</option>
+                    <option value="수학+과학">수학 + 과학</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">상담 유형</label>
+                  <select value={form.consultation_type} onChange={(e) => setForm({ ...form, consultation_type: e.target.value })}
+                    className="w-full border border-gray-300 rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                    <option value="">선택</option>
+                    <option value="입시상담">입시 상담</option>
+                    <option value="내신상담">내신 상담</option>
+                    <option value="수강상담">수강 상담</option>
+                    <option value="기타">기타</option>
+                  </select>
+                </div>
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  연락처 *
-                </label>
-                <input
-                  type="tel"
-                  required
-                  value={form.phone}
-                  onChange={(e) => setForm({ ...form, phone: e.target.value })}
+                <label className="block text-sm font-medium text-gray-700 mb-1">상담 내용</label>
+                <textarea rows={3} value={form.content}
+                  onChange={(e) => setForm({ ...form, content: e.target.value })}
                   className="w-full border border-gray-300 rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  placeholder="010-0000-0000"
-                />
+                  placeholder="궁금한 점을 적어주세요." />
               </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  상담 내용
-                </label>
-                <textarea
-                  rows={4}
-                  value={form.content}
-                  onChange={(e) =>
-                    setForm({ ...form, content: e.target.value })
-                  }
-                  className="w-full border border-gray-300 rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  placeholder="궁금한 점을 적어주세요."
-                />
-              </div>
-              <button
-                type="submit"
-                disabled={loading}
-                className="w-full bg-blue-700 text-white py-3 rounded-xl font-bold hover:bg-blue-800 disabled:opacity-50"
-              >
+              <button type="submit" disabled={loading}
+                className="w-full bg-blue-700 text-white py-3 rounded-xl font-bold hover:bg-blue-800 disabled:opacity-50">
                 {loading ? '신청 중...' : '상담 신청 완료'}
               </button>
             </form>

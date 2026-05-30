@@ -215,6 +215,15 @@ export default function NewConsultationsPage() {
 
                   {isExpanded && (
                     <div className="px-4 pb-4 bg-gray-50 border-t">
+                      {/* 신청 정보 */}
+                      {(c.school || c.grade || c.subject || c.consultation_type) && (
+                        <div className="mt-3 mb-3 flex flex-wrap gap-2">
+                          {c.school && <span className="bg-blue-50 text-blue-700 text-xs px-2 py-1 rounded-full">🏫 {c.school}</span>}
+                          {c.grade && <span className="bg-gray-100 text-gray-600 text-xs px-2 py-1 rounded-full">📚 {c.grade}</span>}
+                          {c.subject && <span className="bg-green-50 text-green-700 text-xs px-2 py-1 rounded-full">📖 {c.subject}</span>}
+                          {c.consultation_type && <span className="bg-yellow-50 text-yellow-700 text-xs px-2 py-1 rounded-full">💬 {c.consultation_type}</span>}
+                        </div>
+                      )}
                       {c.content && (
                         <div className="mt-3 mb-3">
                           <p className="text-xs font-bold text-gray-500 mb-1">상담 내용</p>

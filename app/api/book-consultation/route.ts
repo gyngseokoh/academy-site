@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 
 export async function POST(req: NextRequest) {
-  const { slotId, slotTime, applicant_name, phone, content } = await req.json();
+  const { slotId, slotTime, applicant_name, phone, content, school, grade, subject, consultation_type } = await req.json();
 
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
   const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY!;
@@ -37,6 +37,10 @@ export async function POST(req: NextRequest) {
         reserved_at: slotTime,
         status: '대기',
         teacher_id: teacherId,
+        school: school ?? null,
+        grade: grade ?? null,
+        subject: subject ?? null,
+        consultation_type: consultation_type ?? null,
       }),
     },
   );
