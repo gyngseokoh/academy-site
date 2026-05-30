@@ -12,6 +12,8 @@ export default function CurrentConsultationsAdminPage() {
   const [filter, setFilter] = useState<'전체' | '대기' | '승인' | '거절'>('전체');
   const [filterTeacher, setFilterTeacher] = useState('');
   const [expandedId, setExpandedId] = useState<string | null>(null);
+  const [myRole, setMyRole] = useState('');
+  const [myTeacherId, setMyTeacherId] = useState('');
 
   const token =
     typeof window !== 'undefined'
@@ -23,6 +25,10 @@ export default function CurrentConsultationsAdminPage() {
       router.push('/login');
       return;
     }
+    const role = localStorage.getItem('sb_role') || 'director';
+    const tid = localStorage.getItem('sb_teacher_id') || '';
+    setMyRole(role);
+    setMyTeacherId(tid);
     fetchAll();
   }, []);
 
@@ -59,17 +65,23 @@ export default function CurrentConsultationsAdminPage() {
     return 'bg-yellow-100 text-yellow-700';
   };
 
-  const getTeacherName = (teacherId: string) =>
-    teachers.find((t) => t.id === teacherId)?.name || '-';
+  const getTeacherName = (c: any) =>
+    c.teachers?.name || teachers.find((t) => t.id === c.teacher_id)?.name || '미배정';
+
+  // 역할별 기본 필터: 선생님은 본인 것만
+  const roleFiltered = consultations.filter((c) => {
+    if (myRole === 'teacher') return c.teacher_id === myTeacherId;
+    return true;
+  });
 
   const counts = {
-    전체: consultations.length,
-    대기: consultations.filter((c) => !c.status || c.status === '대기').length,
-    승인: consultations.filter((c) => c.status === '승인').length,
-    거절: consultations.filter((c) => c.status === '거절').length,
+    전체: roleFiltered.length,
+    대기: roleFiltered.filter((c) => !c.status || c.status === '대기').length,
+    승인: roleFiltered.filter((c) => c.status === '승인').length,
+    거절: roleFiltered.filter((c) => c.status === '거절').length,
   };
 
-  const filtered = consultations.filter((c) => {
+  const filtered = roleFiltered.filter((c) => {
     const matchStatus = filter === '전체' || (c.status || '대기') === filter;
     const matchTeacher = !filterTeacher || c.teacher_id === filterTeacher;
     return matchStatus && matchTeacher;
@@ -83,6 +95,13 @@ export default function CurrentConsultationsAdminPage() {
       </nav>
 
       <div className="max-w-5xl mx-auto py-8 px-6">
+        {/* 선생님 안내 */}
+        {myRole === 'teacher' && (
+          <div className="bg-blue-50 border border-blue-200 rounded-xl px-4 py-2 mb-4 text-sm text-blue-700">
+            본인이 담당한 재원생 상담만 표시됩니다.
+          </div>
+        )}
+
         {/* 필터 */}
         <div className="flex flex-wrap gap-2 items-center mb-6">
           {(['전체', '대기', '승인', '거절'] as const).map((f) => (
@@ -139,7 +158,7 @@ export default function CurrentConsultationsAdminPage() {
                     </div>
                     <div className="col-span-2 font-medium text-gray-800 text-sm">{c.applicant_name}</div>
                     <div className="col-span-2 text-gray-500 text-sm">{c.phone}</div>
-                    <div className="col-span-2 text-blue-600 text-sm">{getTeacherName(c.teacher_id)}</div>
+                    <div className="col-span-2 text-blue-600 text-sm">{getTeacherName(c)}</div>
                     <div className="col-span-2 text-gray-700 text-sm font-medium">
                       {c.reserved_at ? formatKST(c.reserved_at) : '-'}
                     </div>

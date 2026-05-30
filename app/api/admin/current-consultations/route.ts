@@ -13,7 +13,7 @@ const headers = {
 // GET /api/admin/current-consultations
 export async function GET() {
   const res = await fetch(
-    `${SUPABASE_URL}/rest/v1/current_student_consultations?select=*&order=reserved_at.desc`,
+    `${SUPABASE_URL}/rest/v1/current_student_consultations?select=*,teachers(id,name,role)&order=reserved_at.desc`,
     { headers },
   );
   const data = await res.json();
