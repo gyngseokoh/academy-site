@@ -143,6 +143,24 @@ export default function AdminPage() {
             <h3 className="text-xl font-bold text-gray-800 mb-2">반 관리</h3>
             <p className="text-gray-500 text-sm">반 생성, 요일/시간, 학생 배정</p>
           </a>
+
+          <a
+            href="/admin/makeup"
+            className="bg-white rounded-2xl shadow-sm border border-gray-100 p-8 hover:shadow-md transition"
+          >
+            <div className="text-4xl mb-4">🔄</div>
+            <h3 className="text-xl font-bold text-gray-800 mb-2">보충 수업 관리</h3>
+            <p className="text-gray-500 text-sm">결석 보충 일정 및 완료 처리</p>
+          </a>
+
+          <a
+            href="/admin/dashboard"
+            className="bg-white rounded-2xl shadow-sm border border-gray-100 p-8 hover:shadow-md transition"
+          >
+            <div className="text-4xl mb-4">📊</div>
+            <h3 className="text-xl font-bold text-gray-800 mb-2">출결 현황판</h3>
+            <p className="text-gray-500 text-sm">결석·보충·장기미등원 현황 + 엑셀</p>
+          </a>
         </div>
       </div>
     </main>

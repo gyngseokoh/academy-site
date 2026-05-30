@@ -23,10 +23,15 @@ type AttendanceRow = {
   note: string | null;
 };
 
-const STATUS_CONFIG = {
-  출석: { label: '출석', cls: 'bg-green-500 text-white', badge: 'bg-green-100 text-green-700' },
-  지각: { label: '지각', cls: 'bg-yellow-500 text-white', badge: 'bg-yellow-100 text-yellow-700' },
-  결석: { label: '결석', cls: 'bg-red-500 text-white', badge: 'bg-red-100 text-red-700' },
+type MakeupModal = {
+  row: AttendanceRow;
+  attendance_id: string;
+};
+
+const STATUS_CONFIG: Record<string, { label: string; active: string; badge: string }> = {
+  출석: { label: '출석', active: 'bg-green-500 text-white', badge: 'bg-green-100 text-green-700' },
+  지각: { label: '지각', active: 'bg-yellow-500 text-white', badge: 'bg-yellow-100 text-yellow-700' },
+  결석: { label: '결석', active: 'bg-red-500 text-white', badge: 'bg-red-100 text-red-700' },
 };
 
 function getKSTDateString() {
@@ -58,6 +63,12 @@ export default function AttendancePage() {
   const [filterTeacherId, setFilterTeacherId] = useState('');
   const [teachers, setTeachers] = useState<{ id: string; name: string }[]>([]);
 
+  // 보충 예약 모달
+  const [makeupModal, setMakeupModal] = useState<MakeupModal | null>(null);
+  const [makeupDate, setMakeupDate] = useState('');
+  const [makeupTime, setMakeupTime] = useState('');
+  const [makeupSaving, setMakeupSaving] = useState(false);
+
   useEffect(() => {
     const token = localStorage.getItem('sb_access_token');
     if (!token) { router.push('/login'); return; }
@@ -69,16 +80,14 @@ export default function AttendancePage() {
     fetchTeachers();
   }, []);
 
-  useEffect(() => {
-    fetchAttendance();
-  }, [date, filterTeacherId]);
+  useEffect(() => { fetchAttendance(); }, [date, filterTeacherId]);
 
   const fetchTeachers = async () => {
-    const res = await fetch(`${process.env.NEXT_PUBLIC_SUPABASE_URL}/rest/v1/teachers?select=id,name&order=sort_order.asc`, {
-      headers: { apikey: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY! },
-    });
-    const data = await res.json();
-    setTeachers(Array.isArray(data) ? data : []);
+    const res = await fetch(
+      `${process.env.NEXT_PUBLIC_SUPABASE_URL}/rest/v1/teachers?select=id,name&order=sort_order.asc`,
+      { headers: { apikey: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY! } },
+    );
+    setTeachers(await res.json());
   };
 
   const fetchAttendance = useCallback(async () => {
@@ -95,16 +104,17 @@ export default function AttendancePage() {
     const key = `${row.student_id}_${row.class_id}`;
     setSaving(key);
 
+    let newAttendanceId = row.attendance_id;
+
     if (row.attendance_id) {
-      // 이미 있으면 PATCH
       await fetch('/api/admin/attendance', {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ id: row.attendance_id, status }),
       });
     } else {
-      // 없으면 POST
-      await fetch('/api/admin/attendance', {
+      // 신규 기록: 잔여 회차 차감
+      const res = await fetch('/api/admin/attendance', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -116,21 +126,66 @@ export default function AttendancePage() {
           teacher_id: row.teacher_id || null,
         }),
       });
+      const data = await res.json();
+      newAttendanceId = data?.id ?? null;
+
+      // 잔여 회차 차감
+      if (row.enrollment_id && row.remaining_sessions > 0) {
+        await fetch('/api/admin/class-enrollments', {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            id: row.enrollment_id,
+            remaining_sessions: row.remaining_sessions - 1,
+          }),
+        });
+      }
     }
 
-    // 로컬 상태 즉시 업데이트
     setRows(prev => prev.map(r =>
       r.student_id === row.student_id && r.class_id === row.class_id
-        ? { ...r, status }
-        : r
+        ? { ...r, status, attendance_id: newAttendanceId, remaining_sessions: r.attendance_id ? r.remaining_sessions : Math.max(0, r.remaining_sessions - 1) }
+        : r,
     ));
+
     setSaving(null);
+
+    // 결석이면 보충 예약 모달 오픈
+    if (status === '결석' && newAttendanceId) {
+      setMakeupModal({ row: { ...row, attendance_id: newAttendanceId }, attendance_id: newAttendanceId });
+      setMakeupDate(addDays(date, 7));
+      setMakeupTime(row.start_time.slice(0, 5));
+    }
+  };
+
+  const handleSaveMakeup = async () => {
+    if (!makeupModal) return;
+    setMakeupSaving(true);
+    await fetch('/api/admin/makeup', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        student_id: makeupModal.row.student_id,
+        class_id: makeupModal.row.class_id,
+        attendance_record_id: makeupModal.attendance_id,
+        scheduled_date: makeupDate || null,
+        scheduled_time: makeupTime ? makeupTime + ':00' : null,
+        teacher_id: makeupModal.row.teacher_id || null,
+      }),
+    });
+    setMakeupSaving(false);
+    setMakeupModal(null);
   };
 
   // 시간대별 그룹핑
   const grouped = rows.reduce<Record<string, { label: string; rows: AttendanceRow[] }>>((acc, row) => {
     const key = `${row.start_time}_${row.class_id}`;
-    if (!acc[key]) acc[key] = { label: `${row.start_time.slice(0,5)}~${row.end_time.slice(0,5)} ${row.class_name}${row.teacher ? ` (${row.teacher.name})` : ''}`, rows: [] };
+    if (!acc[key]) {
+      acc[key] = {
+        label: `${row.start_time.slice(0, 5)}~${row.end_time.slice(0, 5)} ${row.class_name}${row.teacher ? ` · ${row.teacher.name} 선생님` : ''}`,
+        rows: [],
+      };
+    }
     acc[key].rows.push(row);
     return acc;
   }, {});
@@ -148,6 +203,7 @@ export default function AttendancePage() {
       <nav className="bg-blue-700 text-white px-6 py-4 flex justify-between items-center">
         <h1 className="text-xl font-bold">✅ 출결 관리</h1>
         <div className="flex gap-4 text-sm">
+          <a href="/admin/makeup" className="hover:underline">보충 관리</a>
           <a href="/admin/classes" className="hover:underline">반 관리</a>
           <a href="/admin" className="hover:underline">← 관리자 홈</a>
         </div>
@@ -167,8 +223,6 @@ export default function AttendancePage() {
             className="bg-blue-50 text-blue-700 border border-blue-200 px-3 py-2 rounded-lg text-sm font-medium hover:bg-blue-100">
             오늘
           </button>
-
-          {/* 선생님 필터 (원장/부원장만) */}
           {myRole === 'director' && (
             <select value={filterTeacherId} onChange={e => setFilterTeacherId(e.target.value)}
               className="border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 ml-auto">
@@ -220,11 +274,12 @@ export default function AttendancePage() {
                         <div className="flex items-center gap-3">
                           <div>
                             <p className="font-medium text-gray-800">{row.student_name}</p>
-                            {row.student_grade && (
-                              <p className="text-xs text-gray-400">{row.student_grade}</p>
-                            )}
+                            {row.student_grade && <p className="text-xs text-gray-400">{row.student_grade}</p>}
                           </div>
-                          <span className="text-xs text-gray-400">잔여 {row.remaining_sessions}회</span>
+                          <span className={`text-xs px-2 py-0.5 rounded-full font-medium
+                            ${row.remaining_sessions <= 2 ? 'bg-red-100 text-red-600' : 'bg-gray-100 text-gray-500'}`}>
+                            잔여 {row.remaining_sessions}회
+                          </span>
                         </div>
                         <div className="flex gap-1.5">
                           {isSaving ? (
@@ -235,7 +290,7 @@ export default function AttendancePage() {
                                 key={s}
                                 onClick={() => handleStatus(row, s)}
                                 className={`px-3 py-1.5 rounded-lg text-xs font-bold transition
-                                  ${row.status === s ? cfg.cls : 'bg-gray-100 text-gray-500 hover:bg-gray-200'}`}
+                                  ${row.status === s ? cfg.active : 'bg-gray-100 text-gray-500 hover:bg-gray-200'}`}
                               >
                                 {cfg.label}
                               </button>
@@ -251,6 +306,40 @@ export default function AttendancePage() {
           </div>
         )}
       </div>
+
+      {/* 보충 예약 모달 */}
+      {makeupModal && (
+        <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50 px-4">
+          <div className="bg-white rounded-2xl shadow-xl p-8 w-full max-w-sm">
+            <h3 className="font-bold text-gray-800 text-lg mb-1">보충 수업 예약</h3>
+            <p className="text-gray-500 text-sm mb-5">
+              <span className="font-medium text-gray-800">{makeupModal.row.student_name}</span> 학생의 보충 일정을 등록하세요
+            </p>
+            <div className="space-y-3 mb-5">
+              <div>
+                <label className="text-sm font-medium text-gray-700 block mb-1">보충 날짜</label>
+                <input type="date" value={makeupDate} onChange={e => setMakeupDate(e.target.value)}
+                  className="w-full border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" />
+              </div>
+              <div>
+                <label className="text-sm font-medium text-gray-700 block mb-1">보충 시간</label>
+                <input type="time" value={makeupTime} onChange={e => setMakeupTime(e.target.value)}
+                  className="w-full border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" />
+              </div>
+            </div>
+            <div className="flex gap-2">
+              <button onClick={handleSaveMakeup} disabled={makeupSaving}
+                className="flex-1 bg-blue-700 text-white py-3 rounded-lg font-bold hover:bg-blue-800 disabled:opacity-50">
+                {makeupSaving ? '저장 중...' : '보충 예약'}
+              </button>
+              <button onClick={() => setMakeupModal(null)}
+                className="flex-1 border py-3 rounded-lg text-gray-600 hover:bg-gray-50">
+                나중에
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </main>
   );
 }
