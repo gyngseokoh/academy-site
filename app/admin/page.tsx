@@ -170,6 +170,24 @@ export default function AdminPage() {
             <h3 className="text-xl font-bold text-gray-800 mb-2">수강료 · 회차 관리</h3>
             <p className="text-gray-500 text-sm">월별 납부 현황 및 잔여 회차 관리</p>
           </a>
+
+          <a
+            href="/admin/consultation-dashboard"
+            className="bg-white rounded-2xl shadow-sm border border-gray-100 p-8 hover:shadow-md transition"
+          >
+            <div className="text-4xl mb-4">📈</div>
+            <h3 className="text-xl font-bold text-gray-800 mb-2">상담 현황 대시보드</h3>
+            <p className="text-gray-500 text-sm">전환율·월별 추이·선생님별 현황</p>
+          </a>
+
+          <a
+            href="/admin/teacher-workload"
+            className="bg-white rounded-2xl shadow-sm border border-gray-100 p-8 hover:shadow-md transition"
+          >
+            <div className="text-4xl mb-4">📋</div>
+            <h3 className="text-xl font-bold text-gray-800 mb-2">선생님 업무 현황</h3>
+            <p className="text-gray-500 text-sm">담당 학생·출결 처리·대기 업무</p>
+          </a>
         </div>
       </div>
     </main>
