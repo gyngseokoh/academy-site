@@ -53,9 +53,10 @@ export default function Home() {
         </Link>
         <div className="flex gap-5 text-sm font-medium">
           <Link href="/schools" className="hover:text-blue-300 transition">학교 분석</Link>
+          <Link href="/columns" className="hover:text-blue-300 transition">입시 칼럼</Link>
+          <Link href="/stories" className="hover:text-blue-300 transition">합격 사례</Link>
           <Link href="/teachers" className="hover:text-blue-300 transition">선생님 소개</Link>
-          <Link href="/consultation" className="hover:text-blue-300 transition">신규생 상담</Link>
-          <Link href="/consultation/current" className="hover:text-blue-300 transition">재원생 상담</Link>
+          <Link href="/consultation" className="hover:text-blue-300 transition">상담 신청</Link>
         </div>
       </nav>
 
@@ -171,8 +172,11 @@ export default function Home() {
             <p>© 2026 스카이수학과학입시학원</p>
             <p className="mt-1">📞 010-5606-3041 · 당산동</p>
           </div>
-          <div className="flex gap-4 text-sm">
+          <div className="flex gap-4 text-sm flex-wrap justify-center">
             <Link href="/schools" className="hover:text-white transition">학교 분석</Link>
+            <Link href="/columns" className="hover:text-white transition">입시 칼럼</Link>
+            <Link href="/stories" className="hover:text-white transition">합격 사례</Link>
+            <Link href="/reviews" className="hover:text-white transition">학부모 후기</Link>
             <Link href="/teachers" className="hover:text-white transition">선생님 소개</Link>
             <Link href="/consultation" className="hover:text-white transition">상담 신청</Link>
           </div>

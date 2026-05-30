@@ -127,6 +127,15 @@ export default function AdminPage() {
           </a>
 
           <a
+            href="/admin/content"
+            className="bg-white rounded-2xl shadow-sm border border-gray-100 p-8 hover:shadow-md transition"
+          >
+            <div className="text-4xl mb-4">✏️</div>
+            <h3 className="text-xl font-bold text-gray-800 mb-2">콘텐츠 관리</h3>
+            <p className="text-gray-500 text-sm">학교분석·합격사례·후기·칼럼·설명회</p>
+          </a>
+
+          <a
             href="/admin/attendance"
             className="bg-white rounded-2xl shadow-sm border border-gray-100 p-8 hover:shadow-md transition"
           >
