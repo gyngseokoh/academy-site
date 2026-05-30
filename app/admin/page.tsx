@@ -125,6 +125,24 @@ export default function AdminPage() {
             </h3>
             <p className="text-gray-500 text-sm">신규생·재원생 상담 시간 오픈</p>
           </a>
+
+          <a
+            href="/admin/attendance"
+            className="bg-white rounded-2xl shadow-sm border border-gray-100 p-8 hover:shadow-md transition"
+          >
+            <div className="text-4xl mb-4">✅</div>
+            <h3 className="text-xl font-bold text-gray-800 mb-2">출결 관리</h3>
+            <p className="text-gray-500 text-sm">날짜별 출석·지각·결석 체크</p>
+          </a>
+
+          <a
+            href="/admin/classes"
+            className="bg-white rounded-2xl shadow-sm border border-gray-100 p-8 hover:shadow-md transition"
+          >
+            <div className="text-4xl mb-4">📚</div>
+            <h3 className="text-xl font-bold text-gray-800 mb-2">반 관리</h3>
+            <p className="text-gray-500 text-sm">반 생성, 요일/시간, 학생 배정</p>
+          </a>
         </div>
       </div>
     </main>
