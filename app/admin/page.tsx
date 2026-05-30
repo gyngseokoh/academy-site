@@ -161,6 +161,15 @@ export default function AdminPage() {
             <h3 className="text-xl font-bold text-gray-800 mb-2">출결 현황판</h3>
             <p className="text-gray-500 text-sm">결석·보충·장기미등원 현황 + 엑셀</p>
           </a>
+
+          <a
+            href="/admin/sessions"
+            className="bg-white rounded-2xl shadow-sm border border-gray-100 p-8 hover:shadow-md transition"
+          >
+            <div className="text-4xl mb-4">💰</div>
+            <h3 className="text-xl font-bold text-gray-800 mb-2">수강료 · 회차 관리</h3>
+            <p className="text-gray-500 text-sm">월별 납부 현황 및 잔여 회차 관리</p>
+          </a>
         </div>
       </div>
     </main>
