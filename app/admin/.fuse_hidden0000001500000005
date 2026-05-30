@@ -40,7 +40,7 @@ export default function AdminPage() {
     <main className="min-h-screen bg-gray-50">
       {/* 상단 네비 */}
       <nav className="bg-blue-700 text-white px-6 py-4 flex justify-between items-center">
-        <h1 className="text-xl font-bold"><img src="/logo.png" alt="SKY" className="h-9 w-9 object-contain inline-block" /> 스카이 관리자</h1>
+        <h1 className="text-xl font-bold">⭐ 스카이 관리자</h1>
         <div className="flex items-center gap-6">
           <span className="text-sm text-blue-200">{user.email}</span>
           <button
