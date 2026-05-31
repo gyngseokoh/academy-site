@@ -92,7 +92,7 @@ export default function Home() {
               className="bg-white/15 text-white font-bold px-8 py-4 rounded-full border-2 border-white/40 hover:bg-white/25 transition text-sm md:text-base">
               🏫 학교 분석 보기
             </Link>
-            <Link href="/consultation"
+            <Link href="/seminar"
               className="bg-white/10 text-white font-bold px-8 py-4 rounded-full border border-white/30 hover:bg-white/20 transition text-sm md:text-base">
               📅 설명회 신청
             </Link>
