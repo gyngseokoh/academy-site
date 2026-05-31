@@ -134,8 +134,8 @@ export default function StudentsPage() {
       (s.phone || '').includes(search);
     const matchActive =
       filterActive === 'all' ||
-      (filterActive === 'active' && s.is_active) ||
-      (filterActive === 'inactive' && !s.is_active);
+      (filterActive === 'active' && s.is_active !== false) ||
+      (filterActive === 'inactive' && s.is_active === false);
     // 선생님 계정은 본인 담당 학생만 표시
     const matchTeacher =
       myRole !== 'teacher' || s.teacher_id === myTeacherId;

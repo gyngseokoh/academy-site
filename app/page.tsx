@@ -24,7 +24,7 @@ const FEATURES = [
 async function getTeachers() {
   try {
     const res = await fetch(
-      `${process.env.NEXT_PUBLIC_SUPABASE_URL}/rest/v1/teachers?select=id,name,subject,bio,photo_url,role&order=sort_order.asc&limit=4`,
+      `${process.env.NEXT_PUBLIC_SUPABASE_URL}/rest/v1/teachers?select=id,name,subject,bio,photo_url,role&role=neq.director&order=sort_order.asc&limit=4`,
       { headers: { apikey: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY! }, cache: 'no-store' },
     );
     const data = await res.json();

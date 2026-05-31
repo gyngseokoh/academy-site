@@ -6,7 +6,7 @@ const AK = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
 const h = { apikey: AK, Authorization: `Bearer ${SK}`, 'Content-Type': 'application/json' };
 
 export async function GET() {
-  const res = await fetch(`${SB_URL}/rest/v1/reviews?select=*&order=sort_order.asc,created_at.desc`, { headers: h });
+  const res = await fetch(`${SB_URL}/rest/v1/reviews?select=*&order=created_at.desc`, { headers: h });
   return NextResponse.json(await res.json());
 }
 
