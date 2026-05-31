@@ -23,7 +23,7 @@ export async function GET(req: NextRequest) {
 
   // 재원생 상담 전체 조회
   const curRes = await fetch(
-    `${SUPABASE_URL}/rest/v1/current_consultations?select=*,teachers(id,name)&order=created_at.desc`,
+    `${SUPABASE_URL}/rest/v1/current_student_consultations?select=*,teachers(id,name)&order=created_at.desc`,
     { headers: h },
   );
   const curConsultations = await curRes.json();

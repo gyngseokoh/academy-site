@@ -33,13 +33,17 @@ export async function GET(req: NextRequest) {
 export async function POST(req: NextRequest) {
   const body = await req.json();
   // DB 컬럼에 맞게 필드명 정리
+  // DB 컬럼: id, student_id, teacher_id, date, content, created_at (progress/notes 없음)
+  // content 필드에 progress, notes를 합쳐서 저장
+  const parts = [body.content || ''];
+  if (body.progress?.trim()) parts.push(`[진도] ${body.progress}`);
+  if (body.notes?.trim()) parts.push(`[비고] ${body.notes}`);
+
   const payload: any = {
     student_id: body.student_id,
-    date: body.log_date ?? body.date, // 클라이언트는 log_date로 보냄
-    content: body.content || '',
+    date: body.log_date ?? body.date,
+    content: parts.filter(Boolean).join('\n'),
   };
-  if (body.progress !== undefined) payload.progress = body.progress;
-  if (body.notes !== undefined) payload.notes = body.notes;
 
   const res = await fetch(`${SUPABASE_URL}/rest/v1/student_logs`, {
     method: 'POST',
@@ -60,6 +64,15 @@ export async function PATCH(req: NextRequest) {
   const { id, ...fields } = await req.json();
   // 클라이언트가 log_date로 보낼 경우 → date로 변환
   if (fields.log_date) { fields.date = fields.log_date; delete fields.log_date; }
+  // progress/notes → content에 합치기
+  if (fields.progress !== undefined || fields.notes !== undefined) {
+    const parts = [fields.content || ''];
+    if (fields.progress?.trim()) parts.push(`[진도] ${fields.progress}`);
+    if (fields.notes?.trim()) parts.push(`[비고] ${fields.notes}`);
+    fields.content = parts.filter(Boolean).join('\n');
+    delete fields.progress;
+    delete fields.notes;
+  }
 
   const res = await fetch(
     `${SUPABASE_URL}/rest/v1/student_logs?id=eq.${id}`,
