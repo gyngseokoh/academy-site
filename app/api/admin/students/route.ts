@@ -24,12 +24,19 @@ export async function GET(req: NextRequest) {
 }
 
 // POST /api/admin/students
+// body: 단일 객체 또는 객체 배열(일괄 등록) 모두 지원
 export async function POST(req: NextRequest) {
   const body = await req.json();
+  const payload = Array.isArray(body)
+    ? body
+    : Array.isArray(body.rows)
+      ? body.rows
+      : body;
+
   const res = await fetch(`${SUPABASE_URL}/rest/v1/students`, {
     method: 'POST',
     headers: { ...headers, Prefer: 'return=representation' },
-    body: JSON.stringify(body),
+    body: JSON.stringify(payload),
   });
   if (!res.ok) {
     const err = await res.text();
@@ -40,9 +47,30 @@ export async function POST(req: NextRequest) {
 }
 
 // PATCH /api/admin/students
-// body: { id, ...fields }
+// 단일:  { id, ...fields }
+// 일괄:  { ids: [...], fields: {...} }
 export async function PATCH(req: NextRequest) {
-  const { id, ...fields } = await req.json();
+  const body = await req.json();
+
+  if (Array.isArray(body.ids)) {
+    if (body.ids.length === 0) return NextResponse.json({ ok: true });
+    const inList = body.ids.map((i: string) => `"${i}"`).join(',');
+    const res = await fetch(
+      `${SUPABASE_URL}/rest/v1/students?id=in.(${inList})`,
+      {
+        method: 'PATCH',
+        headers: { ...headers, Prefer: 'return=minimal' },
+        body: JSON.stringify(body.fields ?? {}),
+      },
+    );
+    if (!res.ok) {
+      const err = await res.text();
+      return NextResponse.json({ error: err }, { status: 400 });
+    }
+    return NextResponse.json({ ok: true, count: body.ids.length });
+  }
+
+  const { id, ...fields } = body;
   const res = await fetch(
     `${SUPABASE_URL}/rest/v1/students?id=eq.${id}`,
     {
@@ -58,10 +86,23 @@ export async function PATCH(req: NextRequest) {
   return NextResponse.json({ ok: true });
 }
 
-// DELETE /api/admin/students?id=xxx
+// DELETE /api/admin/students?id=xxx  또는  ?ids=a,b,c (일괄)
 export async function DELETE(req: NextRequest) {
   const { searchParams } = new URL(req.url);
   const id = searchParams.get('id');
+  const ids = searchParams.get('ids');
+
+  if (ids) {
+    const list = ids.split(',').filter(Boolean);
+    if (list.length === 0) return NextResponse.json({ ok: true });
+    const inList = list.map((i) => `"${i}"`).join(',');
+    await fetch(`${SUPABASE_URL}/rest/v1/students?id=in.(${inList})`, {
+      method: 'DELETE',
+      headers,
+    });
+    return NextResponse.json({ ok: true, count: list.length });
+  }
+
   if (!id) return NextResponse.json({ error: 'id required' }, { status: 400 });
   await fetch(`${SUPABASE_URL}/rest/v1/students?id=eq.${id}`, {
     method: 'DELETE',

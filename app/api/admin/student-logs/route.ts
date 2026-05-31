@@ -10,39 +10,34 @@ const headers = {
   'Content-Type': 'application/json',
 };
 
-// GET /api/admin/student-logs?student_id=xxx
-// 실제 DB 컬럼: id, student_id, date, content, progress, notes, created_at
+// 실제 DB 컬럼: id, student_id, log_date, content, progress, notes, created_at
+// (teacher_id 컬럼 없음, 날짜 컬럼명은 log_date)
+
+// GET /api/admin/student-logs?student_id=xxx&date=YYYY-MM-DD
 export async function GET(req: NextRequest) {
   const { searchParams } = new URL(req.url);
   const studentId = searchParams.get('student_id');
+  const date = searchParams.get('date');
 
-  let url = `${SUPABASE_URL}/rest/v1/student_logs?select=*&order=date.desc,created_at.desc`;
+  let url = `${SUPABASE_URL}/rest/v1/student_logs?select=*&order=log_date.desc,created_at.desc`;
   if (studentId) url += `&student_id=eq.${studentId}`;
+  if (date) url += `&log_date=eq.${date}`;
 
   const res = await fetch(url, { headers });
   const data = await res.json();
-  // 클라이언트가 log_date 필드 기대 → date → log_date 매핑
-  const mapped = Array.isArray(data)
-    ? data.map((r: any) => ({ ...r, log_date: r.date }))
-    : [];
-  return NextResponse.json(mapped);
+  return NextResponse.json(Array.isArray(data) ? data : []);
 }
 
 // POST /api/admin/student-logs
-// body: { student_id, date, content, progress?, notes? }
+// body: { student_id, log_date|date, content?, progress?, notes? }
 export async function POST(req: NextRequest) {
   const body = await req.json();
-  // DB 컬럼에 맞게 필드명 정리
-  // DB 컬럼: id, student_id, teacher_id, date, content, created_at (progress/notes 없음)
-  // content 필드에 progress, notes를 합쳐서 저장
-  const parts = [body.content || ''];
-  if (body.progress?.trim()) parts.push(`[진도] ${body.progress}`);
-  if (body.notes?.trim()) parts.push(`[비고] ${body.notes}`);
-
-  const payload: any = {
+  const payload = {
     student_id: body.student_id,
-    date: body.log_date ?? body.date,
-    content: parts.filter(Boolean).join('\n'),
+    log_date: body.log_date ?? body.date,
+    content: body.content ?? '',
+    progress: body.progress?.trim() || null,
+    notes: body.notes?.trim() || null,
   };
 
   const res = await fetch(`${SUPABASE_URL}/rest/v1/student_logs`, {
@@ -59,20 +54,14 @@ export async function POST(req: NextRequest) {
 }
 
 // PATCH /api/admin/student-logs
-// body: { id, date?, content?, progress?, notes? }
+// body: { id, log_date?|date?, content?, progress?, notes? }
 export async function PATCH(req: NextRequest) {
-  const { id, ...fields } = await req.json();
-  // 클라이언트가 log_date로 보낼 경우 → date로 변환
-  if (fields.log_date) { fields.date = fields.log_date; delete fields.log_date; }
-  // progress/notes → content에 합치기
-  if (fields.progress !== undefined || fields.notes !== undefined) {
-    const parts = [fields.content || ''];
-    if (fields.progress?.trim()) parts.push(`[진도] ${fields.progress}`);
-    if (fields.notes?.trim()) parts.push(`[비고] ${fields.notes}`);
-    fields.content = parts.filter(Boolean).join('\n');
-    delete fields.progress;
-    delete fields.notes;
-  }
+  const { id, ...raw } = await req.json();
+  const fields: any = {};
+  if (raw.log_date !== undefined || raw.date !== undefined) fields.log_date = raw.log_date ?? raw.date;
+  if (raw.content !== undefined) fields.content = raw.content;
+  if (raw.progress !== undefined) fields.progress = raw.progress?.trim() || null;
+  if (raw.notes !== undefined) fields.notes = raw.notes?.trim() || null;
 
   const res = await fetch(
     `${SUPABASE_URL}/rest/v1/student_logs?id=eq.${id}`,
