@@ -14,14 +14,6 @@ const SCHOOLS = [
   { name: '선유중', href: '/schools/seonyu' },
 ];
 
-const FEATURES = [
-  { icon: '🏫', title: '학교별 내신 분석', desc: '당산권 8개 학교별 출제 경향 · 맞춤 전략' },
-  { icon: '📊', title: '학습관리 시스템', desc: '출결 · 숙제 · 테스트 · 보충 일괄 관리' },
-  { icon: '📋', title: '월간 학습 리포트', desc: '매달 학부모께 학습 현황 투명하게 보고' },
-  { icon: '🎯', title: '입시연구소 운영', desc: '수시 · 정시 · 고교학점제 전략 연구' },
-  { icon: '👥', title: '소수 정예 수업', desc: '정원 제한으로 개인별 집중 지도' },
-  { icon: '🔄', title: '결석 보충 시스템', desc: '모든 결석 수업 100% 보충 보장' },
-];
 
 async function getTeachers() {
   try {
@@ -152,30 +144,8 @@ export default async function Home() {
         </div>
       </section>
 
-      {/* SKY 차별점 */}
-      <section className="py-20 px-6">
-        <div className="max-w-5xl mx-auto">
-          <div className="text-center mb-12">
-            <p className="text-blue-700 font-bold text-xs tracking-widest uppercase mb-2">Why SKY</p>
-            <h2 className="text-3xl font-bold text-gray-900">SKY만의 차별점</h2>
-            <p className="text-gray-500 mt-3 text-sm">단순 수업이 아닌, 입시 전략부터 학습 관리까지</p>
-          </div>
-          <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-            {FEATURES.map((f, i) => (
-              <div key={i} className="bg-gray-50 rounded-2xl p-6 hover:bg-blue-50 hover:shadow-md transition group border border-transparent hover:border-blue-100">
-                <div className="text-3xl mb-3">{f.icon}</div>
-                <h3 className="font-bold text-gray-900 mb-1 text-sm md:text-base">{f.title}</h3>
-                <p className="text-gray-500 text-xs md:text-sm leading-relaxed">{f.desc}</p>
-              </div>
-            ))}
-          </div>
-          <div className="text-center mt-8">
-            <Link href="/about" className="text-blue-700 font-bold text-sm hover:underline">
-              자세히 알아보기 →
-            </Link>
-          </div>
-        </div>
-      </section>
+      {/* SKY의 이야기 — 합격사례·후기·칼럼 탭 */}
+      <StoryTabs stories={stories} reviews={reviews} columns={columns} />
 
       {/* 선생님 소개 */}
       {teachers.length > 0 && (
