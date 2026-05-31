@@ -166,27 +166,55 @@ export default async function AboutPage() {
         </div>
       </section>
 
-      {/* SKY 차별점 — 컴팩트 리스트 */}
+      {/* SKY 차별점 — 상세 설명 */}
       <section className="py-20 px-6">
         <div className="max-w-4xl mx-auto">
           <div className="mb-12">
             <p className="text-blue-700 font-bold text-xs tracking-widest uppercase mb-2">Why SKY</p>
             <h2 className="text-2xl font-bold text-gray-900">SKY만의 차별점</h2>
+            <p className="text-gray-500 mt-2 text-sm">다른 학원과 SKY가 다른 이유를 직접 확인해보세요.</p>
           </div>
-          <div className="grid md:grid-cols-2 gap-px bg-gray-100 rounded-2xl overflow-hidden border border-gray-100">
+          <div className="space-y-6">
             {[
-              { icon: '🎯', title: '학교별 맞춤 내신 전략', desc: '당산권 8개 학교 출제 경향 분석 · 학교별 최적화 전략' },
-              { icon: '📊', title: '체계적인 학습관리', desc: '출결 · 숙제 · 테스트 · 보충 데이터 일괄 관리' },
-              { icon: '📋', title: '월간 학습 리포트', desc: '학습 태도 · 집중도 · 테스트 결과 학부모 보고' },
-              { icon: '🏫', title: '입시연구소 운영', desc: '수시 · 정시 · 고교학점제 전략 지속 연구' },
-              { icon: '👥', title: '소수 정예 수업', desc: '반별 정원 제한 — 개인별 집중 지도 보장' },
-              { icon: '🔄', title: '결석 보충 시스템', desc: '모든 결석 수업 100% 보충 실시' },
+              {
+                icon: '🎯', num: '01',
+                title: '학교별 맞춤 내신 전략',
+                detail: '선유고, 장훈고, 여의도고, 여의도여고, 관악고, 당산서중, 당산중, 선유중 — 당산권 8개 학교의 출제 경향을 매 시험마다 직접 분석합니다. 같은 단원도 학교마다 출제 방식이 완전히 다르기 때문에, SKY는 학교별로 별도의 자료를 제작해 수업에 반영합니다.',
+              },
+              {
+                icon: '📊', num: '02',
+                title: '체계적인 학습관리 시스템',
+                detail: '출결, 숙제 제출 여부, 단원 테스트 점수, 보충 수업 이력까지 모든 학습 데이터를 디지털로 기록합니다. 단순히 출석만 체크하는 것이 아니라, 학생이 어느 단원에서 막히는지, 어떤 유형의 문제를 반복적으로 틀리는지를 데이터로 파악해 수업에 반영합니다.',
+              },
+              {
+                icon: '📋', num: '03',
+                title: '월간 학습 리포트',
+                detail: '매달 학습 태도·집중도·숙제 수행률·테스트 결과·향후 계획을 담은 상세 리포트를 학부모님께 제공합니다. "수업 열심히 듣고 있어요"가 아닌, 구체적인 수치와 선생님의 코멘트가 담긴 리포트로 투명하게 소통합니다.',
+              },
+              {
+                icon: '🏫', num: '04',
+                title: '입시연구소 운영',
+                detail: '고교학점제 도입 이후 달라진 수시·정시 전략, 학교별 합격선 변화, 과목 선택 트렌드를 지속적으로 연구합니다. 입시 제도가 바뀔 때마다 학생에게 맞는 최신 전략을 제시하는 것이 SKY의 역할입니다.',
+              },
+              {
+                icon: '👥', num: '05',
+                title: '소수 정예 수업',
+                detail: '반별 정원을 엄격히 제한합니다. 선생님이 수업 중 모든 학생의 표정과 반응을 확인할 수 있어야 진짜 수업이 가능하다고 믿기 때문입니다. 모르는 부분은 그냥 넘어가지 않습니다.',
+              },
+              {
+                icon: '🔄', num: '06',
+                title: '결석 보충 시스템',
+                detail: '불가피하게 결석한 수업은 반드시 보충합니다. 별도 보충 일정을 잡아 동일한 내용을 다시 수업하며, 보충 완료 여부도 시스템에 기록됩니다. 한 번의 결석도 학습 공백으로 이어지지 않도록 합니다.',
+              },
             ].map((item, i) => (
-              <div key={i} className="bg-white p-6 flex items-start gap-4 hover:bg-blue-50 transition">
-                <span className="text-2xl flex-shrink-0">{item.icon}</span>
+              <div key={i} className="flex gap-6 p-6 bg-white rounded-2xl border border-gray-100 hover:shadow-md hover:border-blue-100 transition">
+                <div className="flex-shrink-0 text-center">
+                  <div className="text-3xl mb-1">{item.icon}</div>
+                  <div className="text-blue-200 font-black text-sm">{item.num}</div>
+                </div>
                 <div>
-                  <div className="font-bold text-gray-900 mb-1">{item.title}</div>
-                  <div className="text-gray-500 text-sm">{item.desc}</div>
+                  <h3 className="font-bold text-gray-900 text-lg mb-2">{item.title}</h3>
+                  <p className="text-gray-500 text-sm leading-relaxed">{item.detail}</p>
                 </div>
               </div>
             ))}
@@ -227,7 +255,7 @@ export default async function AboutPage() {
 
       {/* 연락처 */}
       <section className="py-16 px-6 border-t">
-        <div className="max-w-4xl mx-auto grid md:grid-cols-3 gap-8 text-center">
+        <div className="max-w-4xl mx-auto grid md:grid-cols-2 gap-8 text-center max-w-sm md:max-w-4xl mx-auto">
           <div>
             <div className="text-3xl mb-3">📍</div>
             <div className="font-bold text-gray-900 mb-1">주소</div>
@@ -237,14 +265,6 @@ export default async function AboutPage() {
             <div className="text-3xl mb-3">📞</div>
             <div className="font-bold text-gray-900 mb-1">전화</div>
             <div className="text-gray-500 text-sm">{s['contact_phone'] || '010-5606-3041'}</div>
-          </div>
-          <div>
-            <div className="text-3xl mb-3">🕐</div>
-            <div className="font-bold text-gray-900 mb-1">운영 시간</div>
-            <div className="text-gray-500 text-sm">
-              {s['contact_hours_weekday'] || '평일 14:00 ~ 22:00'}<br />
-              {s['contact_hours_saturday'] || '토요일 10:00 ~ 18:00'}
-            </div>
           </div>
         </div>
         <div className="text-center mt-10">

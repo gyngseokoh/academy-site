@@ -17,7 +17,7 @@ const NAV = (
 
 export default async function StoriesPage() {
   const res = await fetch(
-    `${process.env.NEXT_PUBLIC_SUPABASE_URL}/rest/v1/success_stories?is_published=eq.true&select=*&order=sort_order.asc`,
+    `${process.env.NEXT_PUBLIC_SUPABASE_URL}/rest/v1/success_stories?is_published=eq.true&select=*&order=created_at.desc`,
     { headers: { apikey: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY! }, cache: 'no-store' },
   );
   const stories = await res.json();
