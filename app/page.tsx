@@ -52,10 +52,10 @@ export default function Home() {
           <span className="text-lg font-bold tracking-tight hidden sm:block">스카이수학과학입시학원</span>
         </Link>
         <div className="flex gap-5 text-sm font-medium">
+          <Link href="/about" className="hover:text-blue-300 transition">학원 소개</Link>
+          <Link href="/curriculum" className="hover:text-blue-300 transition">반 소개</Link>
           <Link href="/schools" className="hover:text-blue-300 transition">학교 분석</Link>
-          <Link href="/columns" className="hover:text-blue-300 transition">입시 칼럼</Link>
-          <Link href="/stories" className="hover:text-blue-300 transition">합격 사례</Link>
-          <Link href="/teachers" className="hover:text-blue-300 transition">선생님 소개</Link>
+          <Link href="/teachers" className="hover:text-blue-300 transition">선생님</Link>
           <Link href="/consultation" className="hover:text-blue-300 transition">상담 신청</Link>
         </div>
       </nav>

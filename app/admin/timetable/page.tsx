@@ -47,7 +47,7 @@ export default function TimetablePage() {
   const [classes, setClasses] = useState<ClassItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [role, setRole] = useState('');
-  const canEdit = role === 'director' || role === 'vice_director';
+  const canEdit = !!role; // 로그인한 모든 사용자 편집 가능
 
   // 추가 모달
   const [modal, setModal] = useState<{ classId: string; scheduleId?: string } | null>(null);
