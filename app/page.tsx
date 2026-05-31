@@ -144,9 +144,6 @@ export default async function Home() {
         </div>
       </section>
 
-      {/* SKY의 이야기 — 합격사례·후기·칼럼 탭 */}
-      <StoryTabs stories={stories} reviews={reviews} columns={columns} />
-
       {/* 선생님 소개 */}
       {teachers.length > 0 && (
         <section className="bg-gray-50 py-20 px-6">
@@ -231,7 +228,7 @@ export default async function Home() {
         </section>
       )}
 
-      {/* SKY의 이야기 — 합격사례·후기·칼럼 탭 */}
+      {/* 합격사례 · 후기 · 칼럼 */}
       <StoryTabs stories={stories} reviews={reviews} columns={columns} />
 
       {/* 상담 CTA */}
