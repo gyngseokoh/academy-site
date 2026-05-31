@@ -109,7 +109,7 @@ export default async function Home() {
         <section className="py-12 px-6 bg-white">
           <div className="max-w-5xl mx-auto">
 
-            {/* 성적향상사례 + 학부모후기 나란히 */}
+            {/* 합격사례 + 학부모후기 나란히 */}
             {(stories.length > 0 || reviews.length > 0) && (
               <div className="grid md:grid-cols-2 gap-6 mb-6">
 
@@ -160,4 +160,113 @@ export default async function Home() {
                     </div>
                     <div className="space-y-3">
                       {reviews.map((r: any) => (
-                        <div key={r
+                        <div key={r.id} className="bg-amber-50 rounded-2xl p-4 border border-amber-100">
+                          <div className="text-yellow-400 text-xs mb-2">★★★★★</div>
+                          <p className="text-gray-700 text-sm leading-relaxed line-clamp-3 mb-2">"{r.content}"</p>
+                          <div className="flex items-center gap-2">
+                            <div className="w-6 h-6 rounded-full bg-amber-400 text-white flex items-center justify-center text-xs font-bold">{r.author[0]}</div>
+                            <span className="text-xs font-medium text-gray-600">{r.author}</span>
+                            {r.category && <span className="ml-auto text-xs text-amber-600">{r.category}</span>}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* 입시 칼럼 */}
+            {columns.length > 0 && (
+              <div className="bg-gray-900 rounded-2xl p-6">
+                <div className="flex items-center justify-between mb-4">
+                  <div className="flex items-center gap-2">
+                    <span className="text-lg">📝</span>
+                    <span className="font-bold text-white">입시 칼럼</span>
+                  </div>
+                  <Link href="/columns" className="text-xs text-gray-500 hover:text-blue-400">전체 보기 →</Link>
+                </div>
+                <div className="grid md:grid-cols-2 gap-3">
+                  {columns.map((c: any, i: number) => (
+                    <div key={c.id} className="flex items-start gap-3 bg-white/5 hover:bg-white/10 rounded-xl p-3 transition">
+                      <span className="text-xs font-black text-blue-400/50 mt-0.5 flex-shrink-0">{String(i+1).padStart(2,'0')}</span>
+                      <div className="min-w-0">
+                        {c.category && <span className="text-xs text-blue-400 font-medium">{c.category} · </span>}
+                        <span className="text-white text-sm font-medium">{c.title}</span>
+                        {c.summary && <p className="text-gray-500 text-xs mt-0.5 line-clamp-1">{c.summary}</p>}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
+        </section>
+      )}
+
+      {/* ── 선생님 소개 (컴팩트 스트립) ── */}
+      {teachers.length > 0 && (
+        <section className="py-10 px-6 bg-gray-50 border-t">
+          <div className="max-w-5xl mx-auto">
+            <div className="flex items-center justify-between mb-6">
+              <div>
+                <p className="text-blue-700 font-bold text-xs tracking-widest uppercase">Our Teachers</p>
+                <h2 className="text-xl font-bold text-gray-900 mt-0.5">선생님 소개</h2>
+              </div>
+              <Link href="/teachers" className="text-xs text-gray-400 hover:text-blue-600 font-medium">전체 보기 →</Link>
+            </div>
+            <div className="grid grid-cols-3 md:grid-cols-6 gap-4">
+              {teachers.map((t: any) => (
+                <div key={t.id} className="text-center group">
+                  {t.photo_url ? (
+                    <img src={t.photo_url} alt={t.name} className="w-full aspect-square object-cover rounded-xl mb-2 group-hover:shadow-md transition" />
+                  ) : (
+                    <div className="w-full aspect-square bg-blue-100 rounded-xl flex items-center justify-center mb-2">
+                      <span className="text-3xl text-blue-300">👤</span>
+                    </div>
+                  )}
+                  <div className="font-bold text-gray-900 text-xs">{t.name}</div>
+                  {t.subject && <div className="text-blue-600 text-xs mt-0.5 truncate">{t.subject}</div>}
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
+      )}
+
+      {/* ── 상담 CTA ── */}
+      <section className="bg-blue-900 text-white py-14 px-6">
+        <div className="max-w-3xl mx-auto text-center">
+          <h2 className="text-2xl md:text-3xl font-bold mb-3">"당산권 입시하면 SKY"</h2>
+          <p className="text-blue-300 mb-6 text-sm">지금 상담을 신청하고 우리 아이에게 맞는 학습 전략을 받아보세요.</p>
+          <div className="flex gap-3 justify-center flex-wrap">
+            <ConsultationButton className="bg-yellow-400 text-blue-900 font-bold px-8 py-3 rounded-full hover:bg-yellow-300 transition" label="상담 신청하기" />
+          </div>
+        </div>
+      </section>
+
+      {/* ── 푸터 ── */}
+      <footer className="bg-gray-900 text-gray-400 py-8 px-6">
+        <div className="max-w-5xl mx-auto flex flex-col md:flex-row justify-between items-center gap-4">
+          <div className="flex items-center gap-2">
+            <img src="/logo.png" alt="SKY" className="h-8 w-8 object-contain" />
+            <span className="text-white font-bold text-sm">스카이수학과학입시학원</span>
+          </div>
+          <div className="text-sm text-center">
+            <p>© 2026 스카이수학과학입시학원</p>
+            <p className="mt-1">📞 010-5606-3041 · 당산동</p>
+          </div>
+          <div className="flex gap-4 text-sm flex-wrap justify-center">
+            <Link href="/about" className="hover:text-white transition">학원 소개</Link>
+            <Link href="/teachers" className="hover:text-white transition">선생님</Link>
+            <Link href="/schools" className="hover:text-white transition">학교 분석</Link>
+            <Link href="/stories" className="hover:text-white transition">성적 향상 사례</Link>
+            <Link href="/reviews" className="hover:text-white transition">후기</Link>
+            <Link href="/columns" className="hover:text-white transition">칼럼</Link>
+            <Link href="/consultation" className="hover:text-white transition">상담 신청</Link>
+          </div>
+        </div>
+      </footer>
+    </main>
+  );
+}
