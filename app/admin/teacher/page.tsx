@@ -373,7 +373,7 @@ export default function TeacherAdminPage() {
         {/* 상담 시간 오픈 탭 */}
         {tab === 'slots' && (
           <div>
-            {/* 신규생/재원생 서브탭 */}
+            {/* 신규생/재원생 서브탭 — 원장/부원장만 신규생 탭 표시 */}
             <div className="flex gap-2 mb-6 bg-gray-100 rounded-xl p-1 w-fit">
               <button
                 onClick={() => {
@@ -386,17 +386,19 @@ export default function TeacherAdminPage() {
               >
                 재원생 상담시간
               </button>
-              <button
-                onClick={() => {
-                  setSlotCategory('director');
-                  setSelectedDate('');
-                  setSlots([]);
-                  setDirectorSlots([]);
-                }}
-                className={`px-5 py-1.5 rounded-lg text-sm font-bold transition ${slotCategory === 'director' ? 'bg-white text-blue-700 shadow-sm' : 'text-gray-500'}`}
-              >
-                신규생 상담시간
-              </button>
+              {(teacher?.role === 'director' || teacher?.role === 'vice_director') && (
+                <button
+                  onClick={() => {
+                    setSlotCategory('director');
+                    setSelectedDate('');
+                    setSlots([]);
+                    setDirectorSlots([]);
+                  }}
+                  className={`px-5 py-1.5 rounded-lg text-sm font-bold transition ${slotCategory === 'director' ? 'bg-white text-blue-700 shadow-sm' : 'text-gray-500'}`}
+                >
+                  신규생 상담시간
+                </button>
+              )}
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-8">

@@ -9,6 +9,18 @@ export async function POST(req: NextRequest) {
   const anonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
   const authKey = serviceRoleKey || anonKey;
 
+  // 0. 슬롯 중복 신청 방지
+  const h = { apikey: anonKey, Authorization: `Bearer ${authKey}`, 'Content-Type': 'application/json' };
+  const availRes = await fetch(
+    `${supabaseUrl}/rest/v1/teacher_slots?id=eq.${slotId}&select=is_available`,
+    { headers: h },
+  );
+  const availData = await availRes.json();
+  const isAvailable = Array.isArray(availData) && availData[0]?.is_available !== false;
+  if (!isAvailable) {
+    return NextResponse.json({ error: '이미 예약된 시간입니다. 다른 시간을 선택해주세요.' }, { status: 409 });
+  }
+
   // 1. 재원생 상담 신청 등록
   const insertRes = await fetch(
     `${supabaseUrl}/rest/v1/current_student_consultations`,

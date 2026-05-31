@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
+import { checkAuth } from '@/lib/auth';
 
 const MENU_GROUPS = [
   {
@@ -66,10 +67,9 @@ export default function AdminPage() {
   const router = useRouter();
 
   useEffect(() => {
-    const token = localStorage.getItem('sb_access_token');
+    if (!checkAuth()) return; // 토큰 만료 시 자동 로그아웃
     const userData = localStorage.getItem('sb_user');
     const savedRole = localStorage.getItem('sb_role') || 'director';
-    if (!token) { router.push('/login'); return; }
     if (savedRole === 'teacher') { router.push('/admin/teacher'); return; }
     setRole(savedRole);
     if (userData) setUser(JSON.parse(userData));

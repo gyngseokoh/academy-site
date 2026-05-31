@@ -14,15 +14,17 @@ export async function POST(req: NextRequest) {
     'Content-Type': 'application/json',
   };
 
-  // 1. 슬롯에서 teacher_id 조회
-  const slotRes = await fetch(
-    `${supabaseUrl}/rest/v1/director_slots?id=eq.${slotId}&select=teacher_id`,
+  // 0. 슬롯 중복 신청 방지 — 현재 is_available 확인
+  const availRes = await fetch(
+    `${supabaseUrl}/rest/v1/director_slots?id=eq.${slotId}&select=teacher_id,is_available`,
     { headers: serviceHeaders },
   );
-  const slotData = await slotRes.json();
-  const teacherId = Array.isArray(slotData) && slotData.length > 0
-    ? slotData[0].teacher_id
-    : null;
+  const availData = await availRes.json();
+  const slot = Array.isArray(availData) && availData.length > 0 ? availData[0] : null;
+  if (!slot || slot.is_available === false) {
+    return NextResponse.json({ error: '이미 예약된 시간입니다. 다른 시간을 선택해주세요.' }, { status: 409 });
+  }
+  const teacherId = slot.teacher_id ?? null;
 
   // 2. 상담 신청 등록 (teacher_id 포함)
   const insertRes = await fetch(

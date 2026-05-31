@@ -130,21 +130,30 @@ export default function ReportsPage() {
 
   const handlePrint = (report: Report) => {
     const student = report.students;
-    const win = window.open('', '_blank');
-    if (!win) return;
-    win.document.write(`
+    // 팝업 차단 대신 숨겨진 iframe으로 인쇄
+    const iframe = document.createElement('iframe');
+    iframe.style.position = 'fixed';
+    iframe.style.right = '0';
+    iframe.style.bottom = '0';
+    iframe.style.width = '0';
+    iframe.style.height = '0';
+    iframe.style.border = '0';
+    document.body.appendChild(iframe);
+
+    const html = `
       <html><head>
+        <meta charset="utf-8"/>
         <title>월간 학습 리포트 - ${student?.name}</title>
         <style>
-          body { font-family: 'Malgun Gothic', sans-serif; max-width: 700px; margin: 40px auto; padding: 0 20px; color: #1a1a1a; }
-          h1 { font-size: 24px; color: #1e3a5f; border-bottom: 3px solid #1e3a5f; padding-bottom: 10px; }
-          .header { display: flex; justify-content: space-between; margin-bottom: 30px; }
-          .info { background: #f8f9fa; border-radius: 8px; padding: 16px; margin-bottom: 20px; }
-          .info span { margin-right: 20px; font-size: 14px; color: #555; }
-          .section { margin-bottom: 20px; border: 1px solid #e5e7eb; border-radius: 8px; overflow: hidden; }
-          .section-title { background: #1e3a5f; color: white; padding: 8px 16px; font-size: 14px; font-weight: bold; }
-          .section-content { padding: 14px 16px; font-size: 14px; line-height: 1.7; white-space: pre-wrap; color: #374151; }
-          .footer { text-align: center; margin-top: 40px; font-size: 12px; color: #9ca3af; }
+          @page { margin: 20mm; }
+          body { font-family: 'Malgun Gothic', sans-serif; max-width: 700px; margin: 0 auto; color: #1a1a1a; font-size: 13px; }
+          h1 { font-size: 22px; color: #1e3a5f; border-bottom: 3px solid #1e3a5f; padding-bottom: 10px; margin-bottom: 20px; }
+          .info { background: #f8f9fa; border-radius: 8px; padding: 14px 16px; margin-bottom: 20px; display: flex; flex-wrap: wrap; gap: 12px; }
+          .info span { font-size: 13px; color: #555; }
+          .section { margin-bottom: 16px; border: 1px solid #e5e7eb; border-radius: 8px; overflow: hidden; page-break-inside: avoid; }
+          .section-title { background: #1e3a5f; color: white; padding: 8px 16px; font-size: 13px; font-weight: bold; }
+          .section-content { padding: 12px 16px; font-size: 13px; line-height: 1.7; white-space: pre-wrap; color: #374151; }
+          .footer { text-align: center; margin-top: 30px; font-size: 11px; color: #9ca3af; border-top: 1px solid #e5e7eb; padding-top: 12px; }
         </style>
       </head><body>
         <h1>📋 월간 학습 리포트</h1>
@@ -162,10 +171,14 @@ export default function ReportsPage() {
           </div>
         `).join('')}
         <div class="footer">스카이수학과학입시학원 | 010-5606-3041</div>
-      </body></html>
-    `);
-    win.document.close();
-    win.print();
+      </body></html>`;
+
+    const doc = iframe.contentWindow?.document;
+    if (!doc) return;
+    doc.open(); doc.write(html); doc.close();
+    iframe.contentWindow?.focus();
+    iframe.contentWindow?.print();
+    setTimeout(() => document.body.removeChild(iframe), 1000);
   };
 
   // 미작성 학생 (reports에 없는 학생)
