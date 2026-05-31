@@ -14,8 +14,8 @@ export default async function StoriesPage() {
     <main className="min-h-screen bg-white">
       <Nav current="/stories" />
       <section className="bg-gradient-to-br from-blue-900 to-blue-700 text-white py-16 px-6 text-center">
-        <p className="text-blue-300 text-sm font-bold mb-2 tracking-widest">SUCCESS STORIES</p>
-        <h1 className="text-3xl md:text-4xl font-bold mb-3">합격 사례</h1>
+        <p className="text-blue-300 text-sm font-bold mb-2 tracking-widest">IMPROVEMENT STORIES</p>
+        <h1 className="text-3xl md:text-4xl font-bold mb-3">성적 향상 사례</h1>
         <p className="text-blue-200 text-sm max-w-md mx-auto">SKY 학생들의 성장 스토리를 소개합니다</p>
       </section>
 

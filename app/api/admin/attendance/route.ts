@@ -24,7 +24,7 @@ export async function GET(req: NextRequest) {
 
   // 해당 요일 수업 스케줄 + 반 + 학생 조회
   const schedulesRes = await fetch(
-    `${SUPABASE_URL}/rest/v1/class_schedules?day_of_week=eq.${dayOfWeek}&select=*,classes(*,teachers(id,name),class_enrollments(*,students(id,name,grade,phone)))`,
+    `${SUPABASE_URL}/rest/v1/class_schedules?day_of_week=eq.${dayOfWeek}&select=*,classes(*,teachers(id,name),class_enrollments(*,students(id,name,grade,phone,is_active)))`,
     { headers },
   );
   const schedules = await schedulesRes.json();
@@ -58,6 +58,7 @@ export async function GET(req: NextRequest) {
       enrollments.forEach((enr: any) => {
         const student = enr.students;
         if (!student) return;
+        if (student.is_active === false) return; // 퇴원 학생 제외
 
         const key = `${student.id}_${cls.id}`;
         const att = attMap[key];

@@ -30,12 +30,24 @@ export async function POST(req: NextRequest) {
   const body = await req.json();
   const { student_id, class_id, attendance_record_id, scheduled_date, scheduled_time, teacher_id, note } = body;
 
+  // enrollment_id 자동 조회 (회차 복구를 위해)
+  let enrollmentId: string | null = null;
+  if (student_id && class_id) {
+    const enrRes = await fetch(
+      `${SUPABASE_URL}/rest/v1/class_enrollments?student_id=eq.${student_id}&class_id=eq.${class_id}&select=id&limit=1`,
+      { headers },
+    );
+    const enrData = await enrRes.json();
+    enrollmentId = Array.isArray(enrData) && enrData.length > 0 ? enrData[0].id : null;
+  }
+
   const res = await fetch(`${SUPABASE_URL}/rest/v1/makeup_classes`, {
     method: 'POST',
     headers: { ...headers, Prefer: 'return=representation' },
     body: JSON.stringify({
       student_id,
       class_id,
+      enrollment_id: enrollmentId,
       attendance_record_id: attendance_record_id ?? null,
       scheduled_date: scheduled_date ?? null,
       scheduled_time: scheduled_time ?? null,

@@ -6,7 +6,7 @@ import { useRouter } from 'next/navigation';
 const TABS = [
   { key: 'about', label: '🏛️ 학원 소개', desc: '학원 소개 페이지 수정' },
   { key: 'schools', label: '🏫 학교 분석', desc: '학교별 내용 입력' },
-  { key: 'stories', label: '🏆 합격 사례', desc: '합격 스토리 관리' },
+  { key: 'stories', label: '🏆 성적 향상 사례', desc: '성적 향상 사례 관리' },
   { key: 'reviews', label: '💬 학부모 후기', desc: '후기 관리' },
   { key: 'columns', label: '📝 입시 칼럼', desc: '칼럼 작성' },
   { key: 'seminars', label: '📅 설명회', desc: '설명회 일정 관리' },
@@ -422,85 +422,4 @@ export default function ContentPage() {
             {/* 추가/수정 폼 */}
             {showForm && (
               <div className="bg-white rounded-2xl shadow-sm border p-6 mb-6">
-                <h3 className="font-bold text-gray-800 mb-4">{editItem ? '수정' : '새로 추가'}</h3>
-                {renderForm()}
-                <div className="flex gap-2 mt-4">
-                  <button onClick={handleSave}
-                    className="bg-blue-700 text-white px-6 py-2 rounded-lg font-bold text-sm hover:bg-blue-800">
-                    저장
-                  </button>
-                  <button onClick={() => { setShowForm(false); setEditItem(null); setForm({}); }}
-                    className="border px-6 py-2 rounded-lg text-sm text-gray-600">
-                    취소
-                  </button>
-                </div>
-              </div>
-            )}
-
-            {/* 목록 */}
-            {loading ? (
-              <p className="text-center text-gray-400 py-16">불러오는 중...</p>
-            ) : items.length === 0 ? (
-              <div className="bg-white rounded-2xl border p-12 text-center text-gray-400">
-                아직 등록된 항목이 없습니다. + 추가 버튼을 눌러 시작하세요.
-              </div>
-            ) : (
-              <div className="space-y-3">
-                {items.map((item: any) => (
-                  <div key={item.id} className="bg-white rounded-2xl shadow-sm border p-5">
-                    <div className="flex items-start justify-between">
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-center gap-2 mb-1 flex-wrap">
-                          {/* 제목 */}
-                          <span className="font-bold text-gray-800">
-                            {item.student_label || item.author || item.title || '-'}
-                          </span>
-                          {/* 카테고리 */}
-                          {(item.category || item.subject) && (
-                            <span className="bg-blue-50 text-blue-600 text-xs px-2 py-0.5 rounded-full">
-                              {item.category || item.subject}
-                            </span>
-                          )}
-                          {/* 공개 여부 */}
-                          <span className={`text-xs px-2 py-0.5 rounded-full font-bold ${item.is_published ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-500'}`}>
-                            {item.is_published ? '공개' : '비공개'}
-                          </span>
-                        </div>
-                        {/* 요약/내용 미리보기 */}
-                        <p className="text-gray-400 text-sm truncate">
-                          {item.summary || item.content || item.result || item.description || ''}
-                        </p>
-                        {/* 설명회 일시 */}
-                        {item.scheduled_at && (
-                          <p className="text-blue-600 text-xs mt-1">
-                            📅 {new Date(item.scheduled_at).toLocaleString('ko-KR')}
-                            {item.seminar_applications && ` · 신청 ${item.seminar_applications.length}명`}
-                          </p>
-                        )}
-                      </div>
-                      <div className="flex gap-1.5 ml-4 flex-shrink-0">
-                        <button onClick={() => handleTogglePublish(item)}
-                          className={`px-3 py-1.5 rounded-lg text-xs font-bold border transition
-                            ${item.is_published ? 'border-gray-200 text-gray-500 hover:bg-gray-50' : 'bg-green-600 text-white hover:bg-green-700'}`}>
-                          {item.is_published ? '비공개' : '공개'}
-                        </button>
-                        <button onClick={() => openEdit(item)}
-                          className="border px-3 py-1.5 rounded-lg text-xs text-gray-600 hover:bg-gray-50">
-                          수정
-                        </button>
-                        <button onClick={() => handleDelete(item.id)}
-                          className="border px-3 py-1.5 rounded-lg text-xs text-red-400 hover:bg-red-50">
-                          삭제
-                        </button>
-                      </div>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
-        )}
-      </div>
-    </main>
-  );
-}
+                <h3 className="font-bold text-gray-800 mb-4">{edit

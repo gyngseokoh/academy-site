@@ -2,9 +2,10 @@
 
 import Link from 'next/link';
 import { useState } from 'react';
+import ConsultationButton from '@/app/components/ConsultationModal';
 
 const STORY_LINKS = [
-  { href: '/stories', label: '🏆 합격 사례' },
+  { href: '/stories', label: '🏆 성적 향상 사례' },
   { href: '/reviews', label: '💬 학부모 후기' },
   { href: '/columns', label: '📝 입시 칼럼' },
 ];
@@ -59,10 +60,10 @@ export default function Nav({ current }: { current?: string }) {
           )}
         </div>
 
-        <Link href="/consultation"
-          className="bg-yellow-400 text-blue-900 font-bold px-4 py-1.5 rounded-full hover:bg-yellow-300 transition text-sm flex-shrink-0">
-          상담 신청
-        </Link>
+        <ConsultationButton
+          className="bg-yellow-400 text-blue-900 font-bold px-4 py-1.5 rounded-full hover:bg-yellow-300 transition text-sm flex-shrink-0"
+          label="상담 신청"
+        />
       </div>
     </nav>
   );

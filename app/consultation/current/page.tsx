@@ -27,7 +27,7 @@ export default function CurrentConsultationPage() {
 
   const fetchTeachers = async () => {
     const res = await fetch(
-      `${process.env.NEXT_PUBLIC_SUPABASE_URL}/rest/v1/teachers?select=*`,
+      `${process.env.NEXT_PUBLIC_SUPABASE_URL}/rest/v1/teachers?select=*&role=neq.director&order=sort_order.asc`,
       {
         headers: { apikey: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY! },
       },

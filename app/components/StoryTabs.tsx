@@ -22,14 +22,14 @@ export default function StorySection({
 
   return (
     <>
-      {/* ━━━ 합격 사례 ━━━ */}
+      {/* ━━━ 성적 향상 사례 ━━━ */}
       {stories.length > 0 && (
         <section className="py-20 px-6 bg-white">
           <div className="max-w-5xl mx-auto">
             <div className="flex items-center justify-between mb-10">
               <div>
                 <span className="text-xs font-bold text-blue-600 tracking-widest uppercase">Success Stories</span>
-                <h2 className="text-2xl font-bold text-gray-900 mt-1">합격 사례</h2>
+                <h2 className="text-2xl font-bold text-gray-900 mt-1">성적 향상 사례</h2>
               </div>
               <Link href="/stories" className="text-sm text-gray-400 hover:text-blue-600 transition font-medium">
                 전체 보기 →

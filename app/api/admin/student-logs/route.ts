@@ -11,27 +11,31 @@ const headers = {
 };
 
 // GET /api/admin/student-logs?student_id=xxx
-// 실제 DB 컬럼: id, student_id, log_date, content, progress, notes, created_at
+// 실제 DB 컬럼: id, student_id, date, content, progress, notes, created_at
 export async function GET(req: NextRequest) {
   const { searchParams } = new URL(req.url);
   const studentId = searchParams.get('student_id');
 
-  let url = `${SUPABASE_URL}/rest/v1/student_logs?select=*&order=log_date.desc,created_at.desc`;
+  let url = `${SUPABASE_URL}/rest/v1/student_logs?select=*&order=date.desc,created_at.desc`;
   if (studentId) url += `&student_id=eq.${studentId}`;
 
   const res = await fetch(url, { headers });
   const data = await res.json();
-  return NextResponse.json(Array.isArray(data) ? data : []);
+  // 클라이언트가 log_date 필드 기대 → date → log_date 매핑
+  const mapped = Array.isArray(data)
+    ? data.map((r: any) => ({ ...r, log_date: r.date }))
+    : [];
+  return NextResponse.json(mapped);
 }
 
 // POST /api/admin/student-logs
-// body: { student_id, log_date, content, progress?, notes? }
+// body: { student_id, date, content, progress?, notes? }
 export async function POST(req: NextRequest) {
   const body = await req.json();
   // DB 컬럼에 맞게 필드명 정리
   const payload: any = {
     student_id: body.student_id,
-    log_date: body.log_date,
+    date: body.log_date ?? body.date, // 클라이언트는 log_date로 보냄
     content: body.content || '',
   };
   if (body.progress !== undefined) payload.progress = body.progress;
@@ -51,14 +55,12 @@ export async function POST(req: NextRequest) {
 }
 
 // PATCH /api/admin/student-logs
-// body: { id, log_date?, content?, progress?, notes? }
+// body: { id, date?, content?, progress?, notes? }
 export async function PATCH(req: NextRequest) {
   const { id, ...fields } = await req.json();
-  // date → log_date 혹시 클라이언트에서 date로 보내면 변환
-  if (fields.date && !fields.log_date) {
-    fields.log_date = fields.date;
-    delete fields.date;
-  }
+  // 클라이언트가 log_date로 보낼 경우 → date로 변환
+  if (fields.log_date) { fields.date = fields.log_date; delete fields.log_date; }
+
   const res = await fetch(
     `${SUPABASE_URL}/rest/v1/student_logs?id=eq.${id}`,
     {

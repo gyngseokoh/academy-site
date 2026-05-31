@@ -13,7 +13,7 @@ const h = {
 export async function GET() {
   // 전체 학생 수
   const studentsRes = await fetch(
-    `${SUPABASE_URL}/rest/v1/students?select=id,school,grade,teacher_id,created_at&order=created_at.desc`,
+    `${SUPABASE_URL}/rest/v1/students?select=id,school,grade,teacher_id,created_at&is_active=neq.false&order=created_at.desc`,
     { headers: h },
   );
   const students = await studentsRes.json();
