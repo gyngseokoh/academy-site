@@ -28,6 +28,7 @@ const MENU_GROUPS = [
     color: 'purple',
     items: [
       { icon: '📚', title: '반 관리', desc: '반 생성 · 학생 배정', href: '/admin/classes' },
+      { icon: '🗂️', title: '전체 시간표', desc: '요일별 수업 현황', href: '/admin/timetable' },
       { icon: '✅', title: '출결 관리', desc: '출석 · 지각 · 결석', href: '/admin/attendance' },
       { icon: '🔄', title: '보충 수업', desc: '보충 일정 · 완료 처리', href: '/admin/makeup' },
       { icon: '📊', title: '출결 현황판', desc: '결석 · 장기미등원 · 엑셀', href: '/admin/dashboard' },
