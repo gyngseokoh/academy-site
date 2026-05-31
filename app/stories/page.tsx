@@ -1,19 +1,6 @@
 export const dynamic = 'force-dynamic';
 import Link from 'next/link';
-
-const NAV = (
-  <nav className="bg-blue-900 text-white px-6 py-4 flex justify-between items-center sticky top-0 z-50 shadow-md">
-    <Link href="/" className="flex items-center gap-2">
-      <img src="/logo.png" alt="SKY" className="h-9 w-9 object-contain" />
-      <span className="text-lg font-bold hidden sm:block">스카이수학과학입시학원</span>
-    </Link>
-    <div className="flex gap-5 text-sm font-medium">
-      <Link href="/schools" className="hover:text-blue-300 transition">학교 분석</Link>
-      <Link href="/teachers" className="hover:text-blue-300 transition">선생님 소개</Link>
-      <Link href="/consultation" className="hover:text-blue-300 transition">신규생 상담</Link>
-    </div>
-  </nav>
-);
+import Nav from '@/app/components/Nav';
 
 export default async function StoriesPage() {
   const res = await fetch(
@@ -25,7 +12,7 @@ export default async function StoriesPage() {
 
   return (
     <main className="min-h-screen bg-white">
-      {NAV}
+      <Nav current="/stories" />
       <section className="bg-gradient-to-br from-blue-900 to-blue-700 text-white py-16 px-6 text-center">
         <p className="text-blue-300 text-sm font-bold mb-2 tracking-widest">SUCCESS STORIES</p>
         <h1 className="text-3xl md:text-4xl font-bold mb-3">합격 사례</h1>

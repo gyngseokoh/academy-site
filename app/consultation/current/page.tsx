@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { toKST, slotMatchesKST } from '@/lib/kst';
+import Nav from '@/app/components/Nav';
 
 export default function CurrentConsultationPage() {
   const [teachers, setTeachers] = useState<any[]>([]);
@@ -104,15 +105,7 @@ export default function CurrentConsultationPage() {
 
   return (
     <main className="min-h-screen bg-white">
-      <nav className="bg-blue-700 text-white px-6 py-4 flex justify-between items-center">
-        <h1 className="text-xl font-bold"><img src="/logo.png" alt="SKY" className="h-9 w-9 object-contain inline-block" /> 스카이수학과학입시학원</h1>
-        <div className="flex gap-6 text-sm">
-          <a href="/" className="hover:underline">홈</a>
-          <a href="/teachers" className="hover:underline">선생님 소개</a>
-          <a href="/consultation" className="hover:underline">신규생 상담</a>
-          <a href="/consultation/current" className="hover:underline">재원생 상담</a>
-        </div>
-      </nav>
+      <Nav current="/consultation/current" />
 
       <section className="max-w-3xl mx-auto py-12 px-6">
         <h2 className="text-3xl font-bold text-center mb-2 text-gray-800">

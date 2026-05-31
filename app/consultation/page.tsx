@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { toKST, slotMatchesKST } from '@/lib/kst';
+import Nav from '@/app/components/Nav';
 
 export default function ConsultationPage() {
   const [currentMonth, setCurrentMonth] = useState(new Date());
@@ -88,18 +89,7 @@ export default function ConsultationPage() {
 
   return (
     <main className="min-h-screen bg-white">
-      <nav className="bg-blue-900 text-white px-6 py-4 flex justify-between items-center sticky top-0 z-50 shadow-md">
-        <a href="/" className="flex items-center gap-2">
-          <img src="/logo.png" alt="SKY" className="h-9 w-9 object-contain" />
-          <span className="text-lg font-bold hidden sm:block">스카이수학과학입시학원</span>
-        </a>
-        <div className="flex gap-5 text-sm font-medium">
-          <a href="/schools" className="hover:text-blue-300 transition">학교 분석</a>
-          <a href="/teachers" className="hover:text-blue-300 transition">선생님 소개</a>
-          <a href="/consultation" className="text-yellow-300 font-bold">신규생 상담</a>
-          <a href="/consultation/current" className="hover:text-blue-300 transition">재원생 상담</a>
-        </div>
-      </nav>
+      <Nav current="/consultation" />
 
       <section className="max-w-3xl mx-auto py-12 px-6">
         <h2 className="text-3xl font-bold text-center mb-2 text-gray-800">
