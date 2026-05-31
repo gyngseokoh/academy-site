@@ -1,4 +1,18 @@
+export const dynamic = 'force-dynamic';
 import Link from 'next/link';
+
+async function getSettings(): Promise<Record<string, string>> {
+  try {
+    const res = await fetch(
+      `${process.env.NEXT_PUBLIC_SUPABASE_URL}/rest/v1/site_settings?select=key,value`,
+      { headers: { apikey: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY! }, cache: 'no-store' },
+    );
+    const rows: { key: string; value: string }[] = await res.json();
+    const obj: Record<string, string> = {};
+    if (Array.isArray(rows)) rows.forEach(r => { obj[r.key] = r.value; });
+    return obj;
+  } catch { return {}; }
+}
 
 const FEATURES = [
   {
@@ -49,7 +63,8 @@ const STATS = [
   { value: '소수', label: '정예 운영' },
 ];
 
-export default function AboutPage() {
+export default async function AboutPage() {
+  const s = await getSettings();
   return (
     <main className="min-h-screen bg-white">
       {/* 네비게이션 */}
@@ -75,8 +90,7 @@ export default function AboutPage() {
           <span className="text-yellow-300">스카이수학과학입시학원</span>
         </h1>
         <p className="text-blue-200 text-base md:text-lg max-w-2xl mx-auto leading-relaxed mb-10">
-          단순한 수업이 아닙니다. 학교별 내신 분석부터 입시 전략, 월간 리포트까지—
-          학생 한 명 한 명의 성장을 책임지는 교육을 실천합니다.
+          {s['about_hero_desc'] || '단순한 수업이 아닙니다. 학교별 내신 분석부터 입시 전략, 월간 리포트까지—학생 한 명 한 명의 성장을 책임지는 교육을 실천합니다.'}
         </p>
         <div className="flex flex-wrap gap-4 justify-center">
           <Link href="/consultation"
@@ -117,14 +131,22 @@ export default function AboutPage() {
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             {[
-              { icon: '🔍', title: '개념 중심', desc: '암기보다 이해를 먼저. 개념이 탄탄해야 어떤 문제도 풀 수 있습니다.' },
-              { icon: '📈', title: '데이터 기반', desc: '출결, 테스트, 과제 데이터를 분석해 학생별 취약점을 정확히 파악합니다.' },
-              { icon: '🤝', title: '소통과 신뢰', desc: '선생님·학생·학부모 삼자가 함께 소통하며 목표를 향해 나아갑니다.' },
-            ].map((item, i) => (
-              <div key={i} className="bg-blue-900 text-white rounded-2xl p-8 text-center">
-                <div className="text-4xl mb-4">{item.icon}</div>
-                <h3 className="text-xl font-bold mb-3">{item.title}</h3>
-                <p className="text-blue-200 text-sm leading-relaxed">{item.desc}</p>
+              { icon: '🔍', n: 1 },
+              { icon: '📈', n: 2 },
+              { icon: '🤝', n: 3 },
+            ].map(({ icon, n }) => (
+              <div key={n} className="bg-blue-900 text-white rounded-2xl p-8 text-center">
+                <div className="text-4xl mb-4">{icon}</div>
+                <h3 className="text-xl font-bold mb-3">
+                  {s[`about_philosophy_${n}_title`] || ['개념 중심', '데이터 기반', '소통과 신뢰'][n - 1]}
+                </h3>
+                <p className="text-blue-200 text-sm leading-relaxed">
+                  {s[`about_philosophy_${n}_desc`] || [
+                    '암기보다 이해를 먼저. 개념이 탄탄해야 어떤 문제도 풀 수 있습니다.',
+                    '출결, 테스트, 과제 데이터를 분석해 학생별 취약점을 정확히 파악합니다.',
+                    '선생님·학생·학부모 삼자가 함께 소통하며 목표를 향해 나아갑니다.',
+                  ][n - 1]}
+                </p>
               </div>
             ))}
           </div>
@@ -187,22 +209,22 @@ export default function AboutPage() {
                 <span className="text-xl flex-shrink-0">📍</span>
                 <div>
                   <div className="text-white font-bold mb-0.5">주소</div>
-                  <div>서울시 영등포구 당산동</div>
+                  <div>{s['contact_address'] || '서울시 영등포구 당산동'}</div>
                 </div>
               </div>
               <div className="flex items-start gap-3">
                 <span className="text-xl flex-shrink-0">📞</span>
                 <div>
                   <div className="text-white font-bold mb-0.5">전화</div>
-                  <div>010-5606-3041</div>
+                  <div>{s['contact_phone'] || '010-5606-3041'}</div>
                 </div>
               </div>
               <div className="flex items-start gap-3">
                 <span className="text-xl flex-shrink-0">🕐</span>
                 <div>
                   <div className="text-white font-bold mb-0.5">운영 시간</div>
-                  <div>평일 14:00 ~ 22:00</div>
-                  <div>토요일 10:00 ~ 18:00</div>
+                  <div>{s['contact_hours_weekday'] || '평일 14:00 ~ 22:00'}</div>
+                  <div>{s['contact_hours_saturday'] || '토요일 10:00 ~ 18:00'}</div>
                 </div>
               </div>
             </div>

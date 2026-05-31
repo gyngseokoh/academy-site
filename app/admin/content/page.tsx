@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 
 const TABS = [
+  { key: 'about', label: '🏛️ 학원 소개', desc: '학원 소개 페이지 수정' },
   { key: 'schools', label: '🏫 학교 분석', desc: '학교별 내용 입력' },
   { key: 'stories', label: '🏆 합격 사례', desc: '합격 스토리 관리' },
   { key: 'reviews', label: '💬 학부모 후기', desc: '후기 관리' },
@@ -30,7 +31,7 @@ const COLUMN_CATEGORIES = ['고교학점제', '수시', '정시', '과목선택'
 
 export default function ContentPage() {
   const router = useRouter();
-  const [tab, setTab] = useState<Tab>('schools');
+  const [tab, setTab] = useState<Tab>('about');
   const [items, setItems] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
   const [showForm, setShowForm] = useState(false);
@@ -40,6 +41,10 @@ export default function ContentPage() {
   const [selectedSchool, setSelectedSchool] = useState(SCHOOL_SLUGS[0].slug);
   const [schoolForm, setSchoolForm] = useState<Record<string, string>>({});
   const [schoolSaving, setSchoolSaving] = useState(false);
+
+  // 학원소개 설정
+  const [aboutForm, setAboutForm] = useState<Record<string, string>>({});
+  const [aboutSaving, setAboutSaving] = useState(false);
 
   // 일반 폼
   const [form, setForm] = useState<Record<string, string>>({});
@@ -51,6 +56,14 @@ export default function ContentPage() {
   }, [tab]);
 
   const fetchItems = async () => {
+    if (tab === 'about') {
+      setLoading(true);
+      const res = await fetch('/api/admin/content/settings');
+      const data = await res.json();
+      setAboutForm(typeof data === 'object' ? data : {});
+      setLoading(false);
+      return;
+    }
     if (tab === 'schools') {
       setLoading(true);
       const res = await fetch('/api/admin/content/schools');
@@ -64,6 +77,17 @@ export default function ContentPage() {
     const data = await res.json();
     setItems(Array.isArray(data) ? data : []);
     setLoading(false);
+  };
+
+  const handleAboutSave = async () => {
+    setAboutSaving(true);
+    await fetch('/api/admin/content/settings', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(aboutForm),
+    });
+    setAboutSaving(false);
+    alert('저장되었습니다!');
   };
 
   // 학교분석 저장
@@ -283,6 +307,63 @@ export default function ContentPage() {
             </button>
           ))}
         </div>
+
+        {/* 학원 소개 탭 */}
+        {tab === 'about' && (
+          <div className="bg-white rounded-2xl shadow-sm border p-6 space-y-6">
+            {loading ? <p className="text-gray-400 text-sm">불러오는 중...</p> : (
+              <>
+                <div>
+                  <h3 className="font-bold text-gray-700 mb-3 text-sm border-b pb-2">📣 히어로 소개 문구</h3>
+                  <textarea rows={3} value={aboutForm['about_hero_desc'] ?? ''}
+                    onChange={e => setAboutForm({ ...aboutForm, about_hero_desc: e.target.value })}
+                    className="w-full border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    placeholder="학원 소개 페이지 상단에 표시되는 소개 문구" />
+                </div>
+
+                <div>
+                  <h3 className="font-bold text-gray-700 mb-3 text-sm border-b pb-2">🎯 교육 철학 (3가지)</h3>
+                  <div className="space-y-3">
+                    {[1, 2, 3].map(n => (
+                      <div key={n} className="grid grid-cols-3 gap-3">
+                        <input value={aboutForm[`about_philosophy_${n}_title`] ?? ''}
+                          onChange={e => setAboutForm({ ...aboutForm, [`about_philosophy_${n}_title`]: e.target.value })}
+                          className="border rounded-lg px-3 py-2 text-sm" placeholder={`철학 ${n} 제목`} />
+                        <textarea rows={2} value={aboutForm[`about_philosophy_${n}_desc`] ?? ''}
+                          onChange={e => setAboutForm({ ...aboutForm, [`about_philosophy_${n}_desc`]: e.target.value })}
+                          className="col-span-2 border rounded-lg px-3 py-2 text-sm" placeholder={`철학 ${n} 설명`} />
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                <div>
+                  <h3 className="font-bold text-gray-700 mb-3 text-sm border-b pb-2">📍 연락처 & 운영시간</h3>
+                  <div className="grid grid-cols-2 gap-3">
+                    {[
+                      { key: 'contact_address', label: '주소' },
+                      { key: 'contact_phone', label: '전화번호' },
+                      { key: 'contact_hours_weekday', label: '평일 운영시간' },
+                      { key: 'contact_hours_saturday', label: '토요일 운영시간' },
+                    ].map(f => (
+                      <div key={f.key}>
+                        <label className="text-xs font-bold text-gray-500 block mb-1">{f.label}</label>
+                        <input value={aboutForm[f.key] ?? ''}
+                          onChange={e => setAboutForm({ ...aboutForm, [f.key]: e.target.value })}
+                          className="w-full border rounded-lg px-3 py-2 text-sm" />
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                <button onClick={handleAboutSave} disabled={aboutSaving}
+                  className="bg-blue-700 text-white px-8 py-2 rounded-lg font-bold hover:bg-blue-800 disabled:opacity-50">
+                  {aboutSaving ? '저장 중...' : '저장'}
+                </button>
+              </>
+            )}
+          </div>
+        )}
 
         {/* 학교 분석 탭 */}
         {tab === 'schools' && (
