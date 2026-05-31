@@ -118,11 +118,16 @@ export default function ContentPage() {
   const handleSave = async () => {
     const method = editItem ? 'PATCH' : 'POST';
     const body = editItem ? { id: editItem.id, ...form } : form;
-    await fetch(`/api/admin/content/${tab}`, {
+    const res = await fetch(`/api/admin/content/${tab}`, {
       method,
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(body),
     });
+    const data = await res.json();
+    if (!res.ok) {
+      alert('저장 실패: ' + JSON.stringify(data));
+      return;
+    }
     setShowForm(false);
     setEditItem(null);
     setForm({});
