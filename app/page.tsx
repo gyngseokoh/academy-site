@@ -1,5 +1,7 @@
 export const dynamic = 'force-dynamic';
 import Link from 'next/link';
+import Nav from '@/app/components/Nav';
+import StoryTabs from '@/app/components/StoryTabs';
 
 const SCHOOLS = [
   { name: '선유고', href: '/schools/seonyugo' },
@@ -54,6 +56,28 @@ async function getReviews() {
   } catch { return []; }
 }
 
+async function getStories() {
+  try {
+    const res = await fetch(
+      `${process.env.NEXT_PUBLIC_SUPABASE_URL}/rest/v1/success_stories?is_published=eq.true&select=id,student_label,subject,school_before,school_after,result&order=created_at.desc&limit=3`,
+      { headers: { apikey: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY! }, cache: 'no-store' },
+    );
+    const data = await res.json();
+    return Array.isArray(data) ? data : [];
+  } catch { return []; }
+}
+
+async function getColumns() {
+  try {
+    const res = await fetch(
+      `${process.env.NEXT_PUBLIC_SUPABASE_URL}/rest/v1/columns?is_published=eq.true&select=id,title,category,summary,created_at&order=created_at.desc&limit=3`,
+      { headers: { apikey: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY! }, cache: 'no-store' },
+    );
+    const data = await res.json();
+    return Array.isArray(data) ? data : [];
+  } catch { return []; }
+}
+
 const DAYS = ['일', '월', '화', '수', '목', '금', '토'];
 const SUBJECT_COLOR: Record<string, string> = {
   '수학': 'bg-blue-100 text-blue-700',
@@ -71,24 +95,13 @@ function subjectColor(subject: string) {
 }
 
 export default async function Home() {
-  const [teachers, classes, reviews] = await Promise.all([getTeachers(), getClasses(), getReviews()]);
+  const [teachers, classes, reviews, stories, columns] = await Promise.all([
+    getTeachers(), getClasses(), getReviews(), getStories(), getColumns(),
+  ]);
 
   return (
     <main className="min-h-screen bg-white">
-      {/* 네비게이션 */}
-      <nav className="bg-blue-900 text-white px-6 py-4 flex justify-between items-center sticky top-0 z-50 shadow-md">
-        <Link href="/" className="flex items-center gap-2">
-          <img src="/logo.png" alt="SKY" className="h-9 w-9 object-contain" />
-          <span className="text-lg font-bold tracking-tight hidden sm:block">스카이수학과학입시학원</span>
-        </Link>
-        <div className="flex gap-5 text-sm font-medium">
-          <Link href="/about" className="hover:text-blue-300 transition">학원 소개</Link>
-          <Link href="/teachers" className="hover:text-blue-300 transition">선생님 소개</Link>
-          <Link href="/curriculum" className="hover:text-blue-300 transition">반 소개</Link>
-          <Link href="/schools" className="hover:text-blue-300 transition">학교 분석</Link>
-          <Link href="/consultation" className="hover:text-blue-300 transition bg-yellow-400 text-blue-900 px-4 py-1 rounded-full font-bold">상담 신청</Link>
-        </div>
-      </nav>
+      <Nav />
 
       {/* Hero */}
       <section className="bg-gradient-to-br from-blue-900 via-blue-800 to-blue-700 text-white">
@@ -248,36 +261,8 @@ export default async function Home() {
         </section>
       )}
 
-      {/* 학부모 후기 */}
-      {reviews.length > 0 && (
-        <section className="bg-blue-50 py-20 px-6">
-          <div className="max-w-5xl mx-auto">
-            <div className="text-center mb-12">
-              <p className="text-blue-700 font-bold text-xs tracking-widest uppercase mb-2">Reviews</p>
-              <h2 className="text-3xl font-bold text-gray-900">학부모 후기</h2>
-            </div>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
-              {reviews.map((r: any) => (
-                <div key={r.id} className="bg-white rounded-2xl p-6 shadow-sm">
-                  <div className="text-yellow-400 text-lg mb-3">★★★★★</div>
-                  <p className="text-gray-700 text-sm leading-relaxed mb-4 line-clamp-4">"{r.content}"</p>
-                  <div className="flex items-center justify-between">
-                    <span className="font-bold text-gray-800 text-sm">{r.author}</span>
-                    {r.category && (
-                      <span className="text-xs bg-blue-50 text-blue-600 px-2 py-0.5 rounded-full">{r.category}</span>
-                    )}
-                  </div>
-                </div>
-              ))}
-            </div>
-            <div className="text-center mt-8">
-              <Link href="/reviews" className="text-blue-700 font-bold text-sm hover:underline">
-                후기 더 보기 →
-              </Link>
-            </div>
-          </div>
-        </section>
-      )}
+      {/* SKY의 이야기 — 합격사례·후기·칼럼 탭 */}
+      <StoryTabs stories={stories} reviews={reviews} columns={columns} />
 
       {/* 상담 CTA */}
       <section className="bg-blue-900 text-white py-16 px-6">
