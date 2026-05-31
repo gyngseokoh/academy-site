@@ -22,18 +22,19 @@ const FIELDS = [
   { key: 'strategy', label: 'SKY 학습 전략', icon: '💡' },
 ];
 
-export default async function SchoolPage({ params }: { params: { school: string } }) {
-  const meta = SCHOOL_SLUGS[params.school];
+export default async function SchoolPage({ params }: { params: Promise<{ school: string }> }) {
+  const { school } = await params;
+  const meta = SCHOOL_SLUGS[school];
   if (!meta) notFound();
 
   const res = await fetch(
-    `${process.env.NEXT_PUBLIC_SUPABASE_URL}/rest/v1/school_contents?school_slug=eq.${params.school}&select=*`,
+    `${process.env.NEXT_PUBLIC_SUPABASE_URL}/rest/v1/school_contents?school_slug=eq.${school}&select=*`,
     { headers: { apikey: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY! }, cache: 'no-store' },
   );
   const data = await res.json();
   const content = Array.isArray(data) && data.length > 0 ? data[0] : null;
 
-  const otherSlugs = Object.entries(SCHOOL_SLUGS).filter(([slug]) => slug !== params.school);
+  const otherSlugs = Object.entries(SCHOOL_SLUGS).filter(([slug]) => slug !== school);
 
   return (
     <main className="min-h-screen bg-white">
