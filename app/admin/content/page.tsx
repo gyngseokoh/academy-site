@@ -445,7 +445,7 @@ export default function ContentPage() {
         )}
 
         {/* 나머지 탭들 */}
-        {tab !== 'schools' && (
+        {tab !== 'schools' && tab !== 'about' && (
           <div>
             <div className="flex justify-between items-center mb-4">
               <div className="flex items-center gap-3">
