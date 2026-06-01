@@ -212,6 +212,32 @@ export default function AttendancePage() {
     toast(`${targets.length}명 출석 처리`);
   };
 
+  // 시간대(반) 전체 되돌리기 — 출결 기록 삭제 + 회차 복구
+  const handleGroupUndo = async (groupKey: string, groupRows: AttendanceRow[]) => {
+    const marked = groupRows.filter((r) => r.attendance_id);
+    if (marked.length === 0) return toast('취소할 출결이 없습니다.', 'info');
+    if (!confirm(`${marked.length}명의 출결 기록을 삭제(되돌리기)할까요?`)) return;
+    setGroupSaving(groupKey);
+    const attIds = marked.map((r) => r.attendance_id).join(',');
+    await fetch(`/api/admin/attendance?ids=${attIds}`, { method: 'DELETE' });
+    await Promise.all(marked.map((r) =>
+      r.enrollment_id
+        ? fetch('/api/admin/class-enrollments', {
+            method: 'PATCH', headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ id: r.enrollment_id, remaining_sessions: r.remaining_sessions + 1 }),
+          })
+        : Promise.resolve(),
+    ));
+    const markedKeys = new Set(marked.map((r) => `${r.student_id}_${r.class_id}`));
+    setRows((prev) => prev.map((r) =>
+      markedKeys.has(`${r.student_id}_${r.class_id}`)
+        ? { ...r, status: null, attendance_id: null, remaining_sessions: r.remaining_sessions + 1 }
+        : r,
+    ));
+    setGroupSaving(null);
+    toast(`${marked.length}명 출결 되돌림`);
+  };
+
   // 시간대별 그룹핑
   const grouped = rows.reduce<Record<string, { label: string; rows: AttendanceRow[] }>>((acc, row) => {
     const key = `${row.start_time}_${row.class_id}`;
@@ -300,10 +326,17 @@ export default function AttendancePage() {
               <div key={key} className="bg-white rounded-2xl shadow-sm border overflow-hidden">
                 <div className="bg-blue-700 text-white px-5 py-3 flex items-center justify-between gap-2">
                   <h3 className="font-bold text-sm">{group.label}</h3>
-                  <button onClick={() => handleGroupAllPresent(key, group.rows)} disabled={groupSaving === key}
-                    className="bg-white/20 hover:bg-white/30 text-white text-xs font-bold px-3 py-1.5 rounded-lg whitespace-nowrap disabled:opacity-50">
-                    {groupSaving === key ? '처리 중...' : '✓ 전체 출석'}
-                  </button>
+                  <div className="flex items-center gap-1.5">
+                    <button onClick={() => handleGroupAllPresent(key, group.rows)} disabled={groupSaving === key}
+                      className="bg-white/20 hover:bg-white/30 text-white text-xs font-bold px-3 py-1.5 rounded-lg whitespace-nowrap disabled:opacity-50">
+                      {groupSaving === key ? '처리 중...' : '✓ 전체 출석'}
+                    </button>
+                    <button onClick={() => handleGroupUndo(key, group.rows)} disabled={groupSaving === key}
+                      className="bg-white/10 hover:bg-white/20 text-white text-xs font-bold px-3 py-1.5 rounded-lg whitespace-nowrap disabled:opacity-50"
+                      title="이 시간대 출결 기록 삭제 + 회차 복구">
+                      ↺ 되돌리기
+                    </button>
+                  </div>
                 </div>
                 <div className="divide-y">
                   {group.rows.map(row => {

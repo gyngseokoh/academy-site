@@ -126,3 +126,26 @@ export async function PATCH(req: NextRequest) {
   if (!res.ok) return NextResponse.json({ error: 'update failed' }, { status: 500 });
   return NextResponse.json({ ok: true });
 }
+
+// DELETE /api/admin/attendance?id=xxx  또는  ?ids=a,b,c (일괄)
+export async function DELETE(req: NextRequest) {
+  const { searchParams } = new URL(req.url);
+  const id = searchParams.get('id');
+  const ids = searchParams.get('ids');
+
+  if (ids) {
+    const list = ids.split(',').filter(Boolean);
+    if (list.length === 0) return NextResponse.json({ ok: true });
+    const inList = list.map((i) => `"${i}"`).join(',');
+    await fetch(`${SUPABASE_URL}/rest/v1/attendance_records?id=in.(${inList})`, {
+      method: 'DELETE', headers,
+    });
+    return NextResponse.json({ ok: true, count: list.length });
+  }
+
+  if (!id) return NextResponse.json({ error: 'id required' }, { status: 400 });
+  await fetch(`${SUPABASE_URL}/rest/v1/attendance_records?id=eq.${id}`, {
+    method: 'DELETE', headers,
+  });
+  return NextResponse.json({ ok: true });
+}

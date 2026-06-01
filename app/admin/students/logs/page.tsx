@@ -63,14 +63,17 @@ export default function AllLogsPage() {
     setLoading(false);
   };
 
-  const fetchLogsForDate = useCallback(async () => {
+  const fetchLogsForDate = useCallback(async (preserve = false) => {
     const res = await fetch(`/api/admin/student-logs?date=${date}`);
     const data = await res.json();
     const arr: Log[] = Array.isArray(data) ? data : [];
     setLogs(arr);
-    const d: Record<string, Draft> = {};
-    arr.forEach((l) => { d[l.student_id] = { content: l.content || '', progress: l.progress || '', notes: l.notes || '' }; });
-    setDrafts(d);
+    // preserve=true: 저장 직후 — 다른 학생의 미저장 입력 보존
+    setDrafts((prev) => {
+      const d: Record<string, Draft> = preserve ? { ...prev } : {};
+      arr.forEach((l) => { d[l.student_id] = { content: l.content || '', progress: l.progress || '', notes: l.notes || '' }; });
+      return d;
+    });
     setSaved({});
   }, [date]);
 
@@ -95,7 +98,7 @@ export default function AllLogsPage() {
     setSaving((p) => ({ ...p, [sid]: false }));
     setSaved((p) => ({ ...p, [sid]: true }));
     setTimeout(() => setSaved((p) => ({ ...p, [sid]: false })), 2000);
-    await fetchLogsForDate();
+    await fetchLogsForDate(true);
   };
 
   const handleDelete = async (sid: string) => {
@@ -105,7 +108,7 @@ export default function AllLogsPage() {
     await fetch(`/api/admin/student-logs?id=${existing.id}`, { method: 'DELETE' });
     setDrafts((prev) => { const n = { ...prev }; delete n[sid]; return n; });
     toast('삭제되었습니다');
-    await fetchLogsForDate();
+    await fetchLogsForDate(true);
   };
 
   // ── 선생님 → 반 → 학생 트리 구성 ──

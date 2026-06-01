@@ -12,6 +12,7 @@ export async function fetchWithAuth(url: string, options?: RequestInit): Promise
     ['sb_access_token', 'sb_user', 'sb_role', 'sb_teacher_id'].forEach(k =>
       localStorage.removeItem(k)
     );
+    document.cookie = 'sb_access_token=; path=/; max-age=0; SameSite=Lax';
     window.location.href = '/login?expired=1';
   }
   return res;
@@ -36,6 +37,7 @@ export function checkAuth(redirectPath = '/login'): boolean {
     ['sb_access_token', 'sb_user', 'sb_role', 'sb_teacher_id'].forEach(k =>
       localStorage.removeItem(k)
     );
+    document.cookie = 'sb_access_token=; path=/; max-age=0; SameSite=Lax';
     window.location.href = `${redirectPath}?expired=1`;
     return false;
   }

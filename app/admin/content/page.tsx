@@ -39,6 +39,7 @@ export default function ContentPage() {
   const [showForm, setShowForm] = useState(false);
   const [editItem, setEditItem] = useState<any>(null);
   const [selected, setSelected] = useState<Set<string>>(new Set());
+  const [bulkBusy, setBulkBusy] = useState(false);
 
   // 학교분석 선택
   const [selectedSchool, setSelectedSchool] = useState(SCHOOL_SLUGS[0].slug);
@@ -160,20 +161,24 @@ export default function ContentPage() {
   const toggleAll = () =>
     setSelected(prev => (items.length > 0 && items.every(i => prev.has(i.id))) ? new Set() : new Set(items.map(i => i.id)));
   const bulkPublish = async (pub: boolean) => {
+    if (bulkBusy) return;
+    setBulkBusy(true);
     await Promise.all(Array.from(selected).map(id =>
       fetch(`/api/admin/content/${tab}`, {
         method: 'PATCH', headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ id, is_published: pub }),
       })));
     toast(`${selected.size}개 ${pub ? '공개' : '비공개'} 처리`);
-    setSelected(new Set()); fetchItems();
+    setSelected(new Set()); fetchItems(); setBulkBusy(false);
   };
   const bulkDelete = async () => {
+    if (bulkBusy) return;
     if (!confirm(`선택한 ${selected.size}개를 삭제할까요?`)) return;
+    setBulkBusy(true);
     await Promise.all(Array.from(selected).map(id =>
       fetch(`/api/admin/content/${tab}?id=${id}`, { method: 'DELETE' })));
     toast(`${selected.size}개 삭제`);
-    setSelected(new Set()); fetchItems();
+    setSelected(new Set()); fetchItems(); setBulkBusy(false);
   };
 
   const openEdit = (item: any) => {
@@ -459,9 +464,9 @@ export default function ContentPage() {
             {selected.size > 0 && (
               <div className="sticky top-2 z-20 bg-blue-900 text-white rounded-xl px-4 py-3 mb-3 flex flex-wrap items-center gap-3 shadow-lg">
                 <span className="font-bold text-sm">{selected.size}개 선택됨</span>
-                <button onClick={() => bulkPublish(true)} className="bg-white/15 hover:bg-white/25 px-3 py-1.5 rounded-lg text-sm">공개</button>
-                <button onClick={() => bulkPublish(false)} className="bg-white/15 hover:bg-white/25 px-3 py-1.5 rounded-lg text-sm">비공개</button>
-                <button onClick={bulkDelete} className="bg-red-500 hover:bg-red-600 px-3 py-1.5 rounded-lg text-sm font-bold ml-auto">삭제</button>
+                <button onClick={() => bulkPublish(true)} disabled={bulkBusy} className="bg-white/15 hover:bg-white/25 px-3 py-1.5 rounded-lg text-sm disabled:opacity-50">공개</button>
+                <button onClick={() => bulkPublish(false)} disabled={bulkBusy} className="bg-white/15 hover:bg-white/25 px-3 py-1.5 rounded-lg text-sm disabled:opacity-50">비공개</button>
+                <button onClick={bulkDelete} disabled={bulkBusy} className="bg-red-500 hover:bg-red-600 px-3 py-1.5 rounded-lg text-sm font-bold ml-auto disabled:opacity-50">삭제</button>
                 <button onClick={() => setSelected(new Set())} className="text-blue-200 hover:text-white px-2 py-1.5 text-sm">선택 해제</button>
               </div>
             )}

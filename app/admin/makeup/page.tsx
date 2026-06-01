@@ -50,6 +50,7 @@ export default function MakeupPage() {
 
   // 다중 선택 (목록)
   const [selected, setSelected] = useState<Set<string>>(new Set());
+  const [bulkBusy, setBulkBusy] = useState(false);
 
   useEffect(() => {
     const token = localStorage.getItem('sb_access_token');
@@ -127,16 +128,30 @@ export default function MakeupPage() {
 
   // 목록 일괄 작업
   const bulkStatus = async (status: string) => {
-    await fetch('/api/admin/makeup', {
-      method: 'PATCH', headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ ids: Array.from(selected), fields: { status } }),
-    });
-    toast(`${selected.size}건 '${status}' 처리`); refresh();
+    if (bulkBusy) return;
+    setBulkBusy(true);
+    const idsArr = Array.from(selected);
+    if (status === '완료') {
+      // 완료는 회차 복구가 필요하므로 건별 처리(서버가 수강등록 +1)
+      await Promise.all(idsArr.map((id) =>
+        fetch('/api/admin/makeup', {
+          method: 'PATCH', headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ id, status }),
+        })));
+    } else {
+      await fetch('/api/admin/makeup', {
+        method: 'PATCH', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ ids: idsArr, fields: { status } }),
+      });
+    }
+    toast(`${idsArr.length}건 '${status}' 처리`); refresh(); setBulkBusy(false);
   };
   const bulkDelete = async () => {
+    if (bulkBusy) return;
     if (!confirm(`선택한 ${selected.size}건을 삭제할까요?`)) return;
+    setBulkBusy(true);
     await fetch(`/api/admin/makeup?ids=${Array.from(selected).join(',')}`, { method: 'DELETE' });
-    toast(`${selected.size}건 삭제`); refresh();
+    toast(`${selected.size}건 삭제`); refresh(); setBulkBusy(false);
   };
 
   const filtered = makeups.filter((m) => filter === '전체' || m.status === filter);
@@ -253,10 +268,10 @@ export default function MakeupPage() {
         {selected.size > 0 && (
           <div className="sticky top-2 z-20 bg-blue-900 text-white rounded-xl px-4 py-3 mb-3 flex flex-wrap items-center gap-3 shadow-lg">
             <span className="font-bold text-sm">{selected.size}건 선택됨</span>
-            <button onClick={() => bulkStatus('완료')} className="bg-white/15 hover:bg-white/25 px-3 py-1.5 rounded-lg text-sm">완료 처리</button>
-            <button onClick={() => bulkStatus('미진행')} className="bg-white/15 hover:bg-white/25 px-3 py-1.5 rounded-lg text-sm">미진행</button>
-            <button onClick={() => bulkStatus('예정')} className="bg-white/15 hover:bg-white/25 px-3 py-1.5 rounded-lg text-sm">예정으로</button>
-            <button onClick={bulkDelete} className="bg-red-500 hover:bg-red-600 px-3 py-1.5 rounded-lg text-sm font-bold ml-auto">삭제</button>
+            <button onClick={() => bulkStatus('완료')} disabled={bulkBusy} className="bg-white/15 hover:bg-white/25 px-3 py-1.5 rounded-lg text-sm disabled:opacity-50">완료 처리</button>
+            <button onClick={() => bulkStatus('미진행')} disabled={bulkBusy} className="bg-white/15 hover:bg-white/25 px-3 py-1.5 rounded-lg text-sm disabled:opacity-50">미진행</button>
+            <button onClick={() => bulkStatus('예정')} disabled={bulkBusy} className="bg-white/15 hover:bg-white/25 px-3 py-1.5 rounded-lg text-sm disabled:opacity-50">예정으로</button>
+            <button onClick={bulkDelete} disabled={bulkBusy} className="bg-red-500 hover:bg-red-600 px-3 py-1.5 rounded-lg text-sm font-bold ml-auto disabled:opacity-50">삭제</button>
             <button onClick={() => setSelected(new Set())} className="text-blue-200 hover:text-white px-2 py-1.5 text-sm">선택 해제</button>
           </div>
         )}

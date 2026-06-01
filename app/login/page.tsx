@@ -43,6 +43,8 @@ function LoginForm() {
     }
 
     localStorage.setItem('sb_access_token', data.access_token);
+    // 미들웨어 인증용 쿠키 (same-origin 요청에 자동 포함)
+    document.cookie = `sb_access_token=${data.access_token}; path=/; max-age=43200; SameSite=Lax`;
     localStorage.setItem('sb_user', JSON.stringify(data.user));
 
     const userId = data.user?.id;

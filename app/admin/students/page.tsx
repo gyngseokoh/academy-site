@@ -140,6 +140,7 @@ export default function StudentsPage() {
   // 다중 선택
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [bulkTeacher, setBulkTeacher] = useState('');
+  const [bulkBusy, setBulkBusy] = useState(false);
 
   const token = typeof window !== 'undefined' ? localStorage.getItem('sb_access_token') : '';
 
@@ -249,10 +250,25 @@ export default function StudentsPage() {
     if (mapped.length === 0) toast('이름이 있는 행을 찾지 못했습니다.', 'error');
   };
 
+  const norm = (v: string | null | undefined) => String(v ?? '').replace(/[^0-9]/g, '');
   const handleImport = async () => {
     if (importRows.length === 0) return;
     setAddLoading(true);
-    const payload = importRows.map((r) => ({
+    // 기존 학생과 이름+연락처(숫자만)가 같으면 중복으로 간주하고 건너뜀
+    const existKeys = new Set(students.map((s) => `${s.name}|${norm(s.phone)}`));
+    const seen = new Set<string>();
+    const unique: typeof importRows = [];
+    let dup = 0;
+    for (const r of importRows) {
+      const key = `${r.name}|${norm(r.phone)}`;
+      if (existKeys.has(key) || seen.has(key)) { dup++; continue; }
+      seen.add(key); unique.push(r);
+    }
+    if (unique.length === 0) {
+      toast(`모두 중복이라 추가할 학생이 없습니다 (${dup}명 건너뜀)`, 'error');
+      setAddLoading(false); return;
+    }
+    const payload = unique.map((r) => ({
       name: r.name,
       grade: r.grade || null,
       school: r.school || null,
@@ -266,7 +282,7 @@ export default function StudentsPage() {
       method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload),
     });
     if (res.ok) {
-      toast(`${payload.length}명 가져오기 완료`);
+      toast(dup > 0 ? `${payload.length}명 추가 (중복 ${dup}명 제외)` : `${payload.length}명 가져오기 완료`);
       setImportRows([]); setImportFileName(''); setAddMode('none'); fetchAll();
     } else { toast('가져오기 실패', 'error'); }
     setAddLoading(false);
@@ -301,26 +317,32 @@ export default function StudentsPage() {
   // ── 일괄 작업 ──
   const ids = () => Array.from(selected);
   const bulkSetActive = async (active: boolean) => {
+    if (bulkBusy) return;
+    setBulkBusy(true);
     await fetch('/api/admin/students', {
       method: 'PATCH', headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ ids: ids(), fields: { is_active: active } }),
     });
-    toast(`${selected.size}명 ${active ? '재원' : '퇴원'} 처리`); fetchAll();
+    toast(`${selected.size}명 ${active ? '재원' : '퇴원'} 처리`); await fetchAll(); setBulkBusy(false);
   };
   const bulkAssignTeacher = async () => {
+    if (bulkBusy) return;
     if (!bulkTeacher) return toast('배정할 선생님을 선택하세요.', 'error');
     const teacherId = bulkTeacher === '__unassign__' ? null : bulkTeacher;
+    setBulkBusy(true);
     await fetch('/api/admin/students', {
       method: 'PATCH', headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ ids: ids(), fields: { teacher_id: teacherId } }),
     });
     const tName = teacherId ? teachers.find((t) => t.id === teacherId)?.name : '미배정';
-    toast(`${selected.size}명 담당: ${tName}`); setBulkTeacher(''); fetchAll();
+    toast(`${selected.size}명 담당: ${tName}`); setBulkTeacher(''); await fetchAll(); setBulkBusy(false);
   };
   const bulkDelete = async () => {
+    if (bulkBusy) return;
     if (!confirm(`선택한 ${selected.size}명을 삭제할까요? 관련 일지도 삭제됩니다.`)) return;
+    setBulkBusy(true);
     await fetch(`/api/admin/students?ids=${ids().join(',')}`, { method: 'DELETE' });
-    toast(`${selected.size}명 삭제`); fetchAll();
+    toast(`${selected.size}명 삭제`); await fetchAll(); setBulkBusy(false);
   };
 
   const filtered = students.filter((s) => {
@@ -365,7 +387,7 @@ export default function StudentsPage() {
         <div className="flex flex-wrap gap-3 items-center justify-between mb-4">
           <div className="flex gap-2">
             {([['all', '전체'], ['active', '재원중'], ['inactive', '퇴원']] as const).map(([val, label]) => (
-              <button key={val} onClick={() => setFilterActive(val)}
+              <button key={val} onClick={() => { setFilterActive(val); setSelected(new Set()); }}
                 className={`px-4 py-1.5 rounded-full text-sm font-bold transition
                   ${filterActive === val ? 'bg-blue-700 text-white' : 'bg-white text-gray-600 border hover:border-blue-400'}`}>
                 {label} ({val === 'all' ? students.length : val === 'active' ? students.filter((s) => s.is_active).length : students.filter((s) => !s.is_active).length})
@@ -541,8 +563,8 @@ export default function StudentsPage() {
         {selected.size > 0 && (
           <div className="sticky top-2 z-20 bg-blue-900 text-white rounded-xl px-4 py-3 mb-3 flex flex-wrap items-center gap-3 shadow-lg">
             <span className="font-bold text-sm">{selected.size}명 선택됨</span>
-            <button onClick={() => bulkSetActive(true)} className="bg-white/15 hover:bg-white/25 px-3 py-1.5 rounded-lg text-sm">재원 전환</button>
-            <button onClick={() => bulkSetActive(false)} className="bg-white/15 hover:bg-white/25 px-3 py-1.5 rounded-lg text-sm">퇴원 전환</button>
+            <button onClick={() => bulkSetActive(true)} disabled={bulkBusy} className="bg-white/15 hover:bg-white/25 px-3 py-1.5 rounded-lg text-sm disabled:opacity-50">재원 전환</button>
+            <button onClick={() => bulkSetActive(false)} disabled={bulkBusy} className="bg-white/15 hover:bg-white/25 px-3 py-1.5 rounded-lg text-sm disabled:opacity-50">퇴원 전환</button>
             <div className="flex items-center gap-1">
               <select value={bulkTeacher} onChange={(e) => setBulkTeacher(e.target.value)}
                 className="text-sm text-gray-800 rounded-lg px-2 py-1.5">
@@ -550,9 +572,9 @@ export default function StudentsPage() {
                 <option value="__unassign__">미배정으로</option>
                 {teachers.map((t) => <option key={t.id} value={t.id}>{t.name}</option>)}
               </select>
-              <button onClick={bulkAssignTeacher} className="bg-white/15 hover:bg-white/25 px-3 py-1.5 rounded-lg text-sm">배정</button>
+              <button onClick={bulkAssignTeacher} disabled={bulkBusy} className="bg-white/15 hover:bg-white/25 px-3 py-1.5 rounded-lg text-sm disabled:opacity-50">배정</button>
             </div>
-            <button onClick={bulkDelete} className="bg-red-500 hover:bg-red-600 px-3 py-1.5 rounded-lg text-sm font-bold ml-auto">삭제</button>
+            <button onClick={bulkDelete} disabled={bulkBusy} className="bg-red-500 hover:bg-red-600 px-3 py-1.5 rounded-lg text-sm font-bold ml-auto disabled:opacity-50">삭제</button>
             <button onClick={() => setSelected(new Set())} className="text-blue-200 hover:text-white px-2 py-1.5 text-sm">선택 해제</button>
           </div>
         )}
@@ -563,7 +585,8 @@ export default function StudentsPage() {
         ) : filtered.length === 0 ? (
           <p className="text-center text-gray-400 py-20">학생이 없습니다.</p>
         ) : (
-          <div className="bg-white rounded-2xl shadow-sm overflow-hidden">
+          <div className="overflow-x-auto -mx-6 px-6">
+            <div className="bg-white rounded-2xl shadow-sm overflow-hidden min-w-[760px]">
             <div className="grid grid-cols-12 gap-2 px-4 py-3 bg-gray-50 border-b text-xs font-bold text-gray-500 items-center">
               <div className="col-span-1 flex items-center">
                 <input type="checkbox" checked={allChecked} onChange={toggleAll} className="w-4 h-4 accent-blue-600 cursor-pointer" />
@@ -621,6 +644,7 @@ export default function StudentsPage() {
                 )}
               </div>
             ))}
+            </div>
           </div>
         )}
       </div>

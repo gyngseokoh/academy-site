@@ -41,6 +41,7 @@ export default function ClassesPage() {
 
   // 반 다중 선택(일괄 삭제)
   const [selected, setSelected] = useState<Set<string>>(new Set());
+  const [bulkBusy, setBulkBusy] = useState(false);
 
   useEffect(() => {
     const token = localStorage.getItem('sb_access_token');
@@ -82,9 +83,11 @@ export default function ClassesPage() {
   };
 
   const bulkDeleteClasses = async () => {
+    if (bulkBusy) return;
     if (!confirm(`선택한 ${selected.size}개 반을 삭제할까요?`)) return;
+    setBulkBusy(true);
     await Promise.all(Array.from(selected).map((id) => fetch(`/api/admin/classes?id=${id}`, { method: 'DELETE' })));
-    toast(`${selected.size}개 반 삭제`); fetchAll();
+    toast(`${selected.size}개 반 삭제`); await fetchAll(); setBulkBusy(false);
   };
 
   const handleAddSchedule = async (classId: string) => {
@@ -189,7 +192,7 @@ export default function ClassesPage() {
         {selected.size > 0 && (
           <div className="sticky top-2 z-20 bg-blue-900 text-white rounded-xl px-4 py-3 mb-3 flex items-center gap-3 shadow-lg">
             <span className="font-bold text-sm">{selected.size}개 반 선택됨</span>
-            <button onClick={bulkDeleteClasses} className="bg-red-500 hover:bg-red-600 px-3 py-1.5 rounded-lg text-sm font-bold ml-auto">삭제</button>
+            <button onClick={bulkDeleteClasses} disabled={bulkBusy} className="bg-red-500 hover:bg-red-600 px-3 py-1.5 rounded-lg text-sm font-bold ml-auto disabled:opacity-50">삭제</button>
             <button onClick={() => setSelected(new Set())} className="text-blue-200 hover:text-white px-2 py-1.5 text-sm">선택 해제</button>
           </div>
         )}

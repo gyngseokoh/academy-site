@@ -77,6 +77,7 @@ export default function AdminPage() {
 
   const handleLogout = () => {
     ['sb_access_token', 'sb_user', 'sb_role', 'sb_teacher_id'].forEach(k => localStorage.removeItem(k));
+    document.cookie = 'sb_access_token=; path=/; max-age=0; SameSite=Lax';
     router.push('/login');
   };
 
