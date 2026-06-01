@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
+import { useToast } from '@/app/components/Toast';
 
 const TABS = [
   { key: 'about', label: '🏛️ 학원 소개', desc: '학원 소개 페이지 수정' },
@@ -31,11 +32,13 @@ const COLUMN_CATEGORIES = ['고교학점제', '수시', '정시', '과목선택'
 
 export default function ContentPage() {
   const router = useRouter();
+  const { toast, ToastHost } = useToast();
   const [tab, setTab] = useState<Tab>('about');
   const [items, setItems] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
   const [showForm, setShowForm] = useState(false);
   const [editItem, setEditItem] = useState<any>(null);
+  const [selected, setSelected] = useState<Set<string>>(new Set());
 
   // 학교분석 선택
   const [selectedSchool, setSelectedSchool] = useState(SCHOOL_SLUGS[0].slug);
@@ -52,6 +55,7 @@ export default function ContentPage() {
   useEffect(() => {
     const token = localStorage.getItem('sb_access_token');
     if (!token) { router.push('/login'); return; }
+    setSelected(new Set());
     fetchItems();
   }, [tab]);
 
@@ -87,7 +91,7 @@ export default function ContentPage() {
       body: JSON.stringify(aboutForm),
     });
     setAboutSaving(false);
-    alert('저장되었습니다!');
+    toast('저장되었습니다');
   };
 
   // 학교분석 저장
@@ -111,7 +115,7 @@ export default function ContentPage() {
     });
     setSchoolSaving(false);
     fetchItems();
-    alert('저장되었습니다!');
+    toast('저장되었습니다');
   };
 
   // 일반 항목 저장
@@ -125,12 +129,13 @@ export default function ContentPage() {
     });
     const data = await res.json();
     if (!res.ok) {
-      alert('저장 실패: ' + JSON.stringify(data));
+      toast('저장 실패: ' + JSON.stringify(data), 'error');
       return;
     }
     setShowForm(false);
     setEditItem(null);
     setForm({});
+    toast(editItem ? '수정되었습니다' : '추가되었습니다');
     fetchItems();
   };
 
@@ -146,7 +151,29 @@ export default function ContentPage() {
   const handleDelete = async (id: string) => {
     if (!confirm('삭제할까요?')) return;
     await fetch(`/api/admin/content/${tab}?id=${id}`, { method: 'DELETE' });
+    toast('삭제되었습니다');
     fetchItems();
+  };
+
+  const toggleOne = (id: string) =>
+    setSelected(prev => { const n = new Set(prev); n.has(id) ? n.delete(id) : n.add(id); return n; });
+  const toggleAll = () =>
+    setSelected(prev => (items.length > 0 && items.every(i => prev.has(i.id))) ? new Set() : new Set(items.map(i => i.id)));
+  const bulkPublish = async (pub: boolean) => {
+    await Promise.all(Array.from(selected).map(id =>
+      fetch(`/api/admin/content/${tab}`, {
+        method: 'PATCH', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id, is_published: pub }),
+      })));
+    toast(`${selected.size}개 ${pub ? '공개' : '비공개'} 처리`);
+    setSelected(new Set()); fetchItems();
+  };
+  const bulkDelete = async () => {
+    if (!confirm(`선택한 ${selected.size}개를 삭제할까요?`)) return;
+    await Promise.all(Array.from(selected).map(id =>
+      fetch(`/api/admin/content/${tab}?id=${id}`, { method: 'DELETE' })));
+    toast(`${selected.size}개 삭제`);
+    setSelected(new Set()); fetchItems();
   };
 
   const openEdit = (item: any) => {
@@ -296,6 +323,7 @@ export default function ContentPage() {
 
   return (
     <main className="min-h-screen bg-gray-50">
+      {ToastHost}
       <nav className="bg-blue-700 text-white px-6 py-4 flex justify-between items-center">
         <h1 className="text-xl font-bold">✏️ 콘텐츠 관리</h1>
         <a href="/admin" className="text-sm hover:underline">← 관리자 홈</a>
@@ -412,12 +440,31 @@ export default function ContentPage() {
         {tab !== 'schools' && (
           <div>
             <div className="flex justify-between items-center mb-4">
-              <p className="text-gray-500 text-sm">총 {items.length}개</p>
+              <div className="flex items-center gap-3">
+                <p className="text-gray-500 text-sm">총 {items.length}개</p>
+                {items.length > 0 && (
+                  <label className="flex items-center gap-1.5 text-sm text-gray-500 cursor-pointer">
+                    <input type="checkbox" checked={items.length > 0 && items.every(i => selected.has(i.id))}
+                      onChange={toggleAll} className="w-4 h-4 accent-blue-600" />
+                    전체 선택
+                  </label>
+                )}
+              </div>
               <button onClick={openAdd}
                 className="bg-blue-700 text-white px-5 py-2 rounded-full font-bold text-sm hover:bg-blue-800">
                 + 추가
               </button>
             </div>
+
+            {selected.size > 0 && (
+              <div className="sticky top-2 z-20 bg-blue-900 text-white rounded-xl px-4 py-3 mb-3 flex flex-wrap items-center gap-3 shadow-lg">
+                <span className="font-bold text-sm">{selected.size}개 선택됨</span>
+                <button onClick={() => bulkPublish(true)} className="bg-white/15 hover:bg-white/25 px-3 py-1.5 rounded-lg text-sm">공개</button>
+                <button onClick={() => bulkPublish(false)} className="bg-white/15 hover:bg-white/25 px-3 py-1.5 rounded-lg text-sm">비공개</button>
+                <button onClick={bulkDelete} className="bg-red-500 hover:bg-red-600 px-3 py-1.5 rounded-lg text-sm font-bold ml-auto">삭제</button>
+                <button onClick={() => setSelected(new Set())} className="text-blue-200 hover:text-white px-2 py-1.5 text-sm">선택 해제</button>
+              </div>
+            )}
 
             {/* 추가/수정 폼 */}
             {showForm && (
@@ -447,8 +494,10 @@ export default function ContentPage() {
             ) : (
               <div className="space-y-3">
                 {items.map((item: any) => (
-                  <div key={item.id} className="bg-white rounded-2xl shadow-sm border p-5">
-                    <div className="flex items-start justify-between">
+                  <div key={item.id} className={`bg-white rounded-2xl shadow-sm border p-5 ${selected.has(item.id) ? 'ring-2 ring-blue-400' : ''}`}>
+                    <div className="flex items-start justify-between gap-3">
+                      <input type="checkbox" checked={selected.has(item.id)} onChange={() => toggleOne(item.id)}
+                        className="w-4 h-4 accent-blue-600 mt-1 flex-shrink-0" />
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-2 mb-1 flex-wrap">
                           {/* 제목 */}

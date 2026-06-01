@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
+import { useToast } from '@/app/components/Toast';
 
 // 0=일,1=월,2=화,3=수,4=목,5=금,6=토
 const DAYS = ['일', '월', '화', '수', '목', '금', '토'];
@@ -44,15 +45,19 @@ type ClassItem = {
 
 export default function TimetablePage() {
   const router = useRouter();
+  const { toast, ToastHost } = useToast();
   const [classes, setClasses] = useState<ClassItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [role, setRole] = useState('');
   const canEdit = !!role; // 로그인한 모든 사용자 편집 가능
 
-  // 추가 모달
+  // 추가 모달 — 여러 요일 동시 선택
   const [modal, setModal] = useState<{ classId: string; scheduleId?: string } | null>(null);
-  const [form, setForm] = useState({ day: '1', start: '15:00', end: '17:00' });
+  const [form, setForm] = useState<{ days: number[]; start: string; end: string }>({ days: [1], start: '15:00', end: '17:00' });
   const [saving, setSaving] = useState(false);
+
+  const toggleDay = (d: number) =>
+    setForm(f => ({ ...f, days: f.days.includes(d) ? f.days.filter(x => x !== d) : [...f.days, d] }));
 
   useEffect(() => {
     const token = localStorage.getItem('sb_access_token');
@@ -72,14 +77,19 @@ export default function TimetablePage() {
 
   const handleAddSchedule = async () => {
     if (!modal) return;
+    if (!modal.classId) return toast('반을 선택하세요.', 'error');
+    if (form.days.length === 0) return toast('요일을 1개 이상 선택하세요.', 'error');
     setSaving(true);
-    await fetch('/api/admin/class-schedules', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ class_id: modal.classId, day_of_week: parseInt(form.day), start_time: form.start, end_time: form.end }),
-    });
+    await Promise.all(form.days.map(d =>
+      fetch('/api/admin/class-schedules', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ class_id: modal.classId, day_of_week: d, start_time: form.start, end_time: form.end }),
+      }),
+    ));
     setSaving(false);
     setModal(null);
+    toast(`${form.days.length}개 요일 시간 추가`);
     fetchClasses();
   };
 
@@ -100,6 +110,7 @@ export default function TimetablePage() {
 
   return (
     <main className="min-h-screen bg-gray-50">
+      {ToastHost}
       <nav className="bg-blue-700 text-white px-6 py-3 flex justify-between items-center">
         <h1 className="text-lg font-bold">📅 전체 시간표</h1>
         <a href="/admin" className="text-sm hover:underline">← 관리자 홈</a>
@@ -114,7 +125,7 @@ export default function TimetablePage() {
           ))}
           {canEdit && (
             <button
-              onClick={() => { setForm({ day: '1', start: '15:00', end: '17:00' }); setModal({ classId: '' }); }}
+              onClick={() => { setForm({ days: [1], start: '15:00', end: '17:00' }); setModal({ classId: '' }); }}
               className="ml-auto bg-blue-700 text-white px-4 py-1.5 rounded-full text-sm font-bold hover:bg-blue-800"
             >
               + 수업 시간 추가
@@ -216,7 +227,7 @@ export default function TimetablePage() {
                 <div className="text-xs text-gray-400 mt-0.5">학생 {cls.class_enrollments.length}명</div>
                 {canEdit && (
                   <button
-                    onClick={() => { setForm({ day: '1', start: '15:00', end: '17:00' }); setModal({ classId: cls.id }); }}
+                    onClick={() => { setForm({ days: [1], start: '15:00', end: '17:00' }); setModal({ classId: cls.id }); }}
                     className="mt-2 text-xs text-blue-600 hover:underline">
                     + 시간 추가
                   </button>
@@ -245,11 +256,18 @@ export default function TimetablePage() {
                 </select>
               </div>
               <div>
-                <label className="text-xs font-bold text-gray-600 block mb-1">요일</label>
-                <select value={form.day} onChange={e => setForm({ ...form, day: e.target.value })}
-                  className="w-full border rounded-lg px-3 py-2 text-sm">
-                  {DAY_ORDER.map(i => <option key={i} value={i}>{DAYS[i]}요일</option>)}
-                </select>
+                <label className="text-xs font-bold text-gray-600 block mb-1">요일 (여러 개 선택 가능)</label>
+                <div className="flex flex-wrap gap-1.5">
+                  {DAY_ORDER.map(i => {
+                    const on = form.days.includes(i);
+                    return (
+                      <button type="button" key={i} onClick={() => toggleDay(i)}
+                        className={`w-9 h-9 rounded-lg text-sm font-bold transition ${on ? 'bg-blue-700 text-white' : 'bg-gray-100 text-gray-500 hover:bg-gray-200'}`}>
+                        {DAYS[i]}
+                      </button>
+                    );
+                  })}
+                </div>
               </div>
               <div className="grid grid-cols-2 gap-3">
                 <div>

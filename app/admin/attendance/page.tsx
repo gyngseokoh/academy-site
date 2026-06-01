@@ -2,6 +2,7 @@
 
 import { useEffect, useState, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
+import { useToast } from '@/app/components/Toast';
 
 type AttendanceRow = {
   schedule_id: string;
@@ -54,7 +55,9 @@ function addDays(dateStr: string, n: number) {
 
 export default function AttendancePage() {
   const router = useRouter();
+  const { toast, ToastHost } = useToast();
   const [date, setDate] = useState(getKSTDateString());
+  const [groupSaving, setGroupSaving] = useState<string | null>(null);
   const [rows, setRows] = useState<AttendanceRow[]>([]);
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState<string | null>(null);
@@ -177,6 +180,38 @@ export default function AttendancePage() {
     setMakeupModal(null);
   };
 
+  // 시간대(반) 전체 출석 — 미처리 학생만 일괄 출석
+  const handleGroupAllPresent = async (groupKey: string, groupRows: AttendanceRow[]) => {
+    const targets = groupRows.filter(r => !r.status);
+    if (targets.length === 0) return toast('이미 모두 처리됨', 'info');
+    setGroupSaving(groupKey);
+    for (const row of targets) {
+      const res = await fetch('/api/admin/attendance', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          student_id: row.student_id, class_id: row.class_id, attendance_date: date,
+          start_time: row.start_time, status: '출석', teacher_id: row.teacher_id || null,
+        }),
+      });
+      const data = await res.json();
+      const newId = data?.id ?? null;
+      if (row.enrollment_id && row.remaining_sessions > 0) {
+        await fetch('/api/admin/class-enrollments', {
+          method: 'PATCH', headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ id: row.enrollment_id, remaining_sessions: row.remaining_sessions - 1 }),
+        });
+      }
+      setRows(prev => prev.map(r =>
+        r.student_id === row.student_id && r.class_id === row.class_id
+          ? { ...r, status: '출석', attendance_id: newId, remaining_sessions: Math.max(0, r.remaining_sessions - 1) }
+          : r,
+      ));
+    }
+    setGroupSaving(null);
+    toast(`${targets.length}명 출석 처리`);
+  };
+
   // 시간대별 그룹핑
   const grouped = rows.reduce<Record<string, { label: string; rows: AttendanceRow[] }>>((acc, row) => {
     const key = `${row.start_time}_${row.class_id}`;
@@ -200,6 +235,7 @@ export default function AttendancePage() {
 
   return (
     <main className="min-h-screen bg-gray-50">
+      {ToastHost}
       <nav className="bg-blue-700 text-white px-6 py-4 flex justify-between items-center">
         <h1 className="text-xl font-bold">✅ 출결 관리</h1>
         <div className="flex gap-4 text-sm">
@@ -262,8 +298,12 @@ export default function AttendancePage() {
           <div className="space-y-4">
             {Object.entries(grouped).map(([key, group]) => (
               <div key={key} className="bg-white rounded-2xl shadow-sm border overflow-hidden">
-                <div className="bg-blue-700 text-white px-5 py-3">
+                <div className="bg-blue-700 text-white px-5 py-3 flex items-center justify-between gap-2">
                   <h3 className="font-bold text-sm">{group.label}</h3>
+                  <button onClick={() => handleGroupAllPresent(key, group.rows)} disabled={groupSaving === key}
+                    className="bg-white/20 hover:bg-white/30 text-white text-xs font-bold px-3 py-1.5 rounded-lg whitespace-nowrap disabled:opacity-50">
+                    {groupSaving === key ? '처리 중...' : '✓ 전체 출석'}
+                  </button>
                 </div>
                 <div className="divide-y">
                   {group.rows.map(row => {
