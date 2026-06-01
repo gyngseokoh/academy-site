@@ -131,19 +131,12 @@ export default function MakeupPage() {
     if (bulkBusy) return;
     setBulkBusy(true);
     const idsArr = Array.from(selected);
-    if (status === '완료') {
-      // 완료는 회차 복구가 필요하므로 건별 처리(서버가 수강등록 +1)
-      await Promise.all(idsArr.map((id) =>
-        fetch('/api/admin/makeup', {
-          method: 'PATCH', headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ id, status }),
-        })));
-    } else {
-      await fetch('/api/admin/makeup', {
+    // 회차 보정이 상태 전환 기준이므로 모든 상태를 건별로 처리(서버가 ±1 판단)
+    await Promise.all(idsArr.map((id) =>
+      fetch('/api/admin/makeup', {
         method: 'PATCH', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ ids: idsArr, fields: { status } }),
-      });
-    }
+        body: JSON.stringify({ id, status }),
+      })));
     toast(`${idsArr.length}건 '${status}' 처리`); refresh(); setBulkBusy(false);
   };
   const bulkDelete = async () => {

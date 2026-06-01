@@ -110,6 +110,18 @@ export async function PATCH(req: NextRequest) {
   }
 
   const { id, enrollment_id: _ignore, ...fields } = body;
+
+  // 변경 전 상태 조회 (회차 보정은 '상태 전환' 기준으로만)
+  let prev: { status?: string; student_id?: string; class_id?: string } | null = null;
+  if (fields.status !== undefined) {
+    const curRes = await fetch(
+      `${SUPABASE_URL}/rest/v1/makeup_classes?id=eq.${id}&select=status,student_id,class_id`,
+      { headers },
+    );
+    const curData = await curRes.json();
+    prev = Array.isArray(curData) && curData.length > 0 ? curData[0] : null;
+  }
+
   const res = await fetch(`${SUPABASE_URL}/rest/v1/makeup_classes?id=eq.${id}`, {
     method: 'PATCH',
     headers: { ...headers, Prefer: 'return=minimal' },
@@ -117,27 +129,27 @@ export async function PATCH(req: NextRequest) {
   });
   if (!res.ok) return NextResponse.json({ error: 'update failed' }, { status: 500 });
 
-  if (fields.status === '완료') {
-    const mkRes = await fetch(
-      `${SUPABASE_URL}/rest/v1/makeup_classes?id=eq.${id}&select=student_id,class_id`,
-      { headers },
-    );
-    const mkData = await mkRes.json();
-    const mk = Array.isArray(mkData) && mkData.length > 0 ? mkData[0] : null;
-    const enrollmentId = await lookupEnrollmentId(mk?.student_id, mk?.class_id);
-    if (enrollmentId) {
-      const enrRes = await fetch(
-        `${SUPABASE_URL}/rest/v1/class_enrollments?id=eq.${enrollmentId}&select=remaining_sessions`,
-        { headers },
-      );
-      const enrData = await enrRes.json();
-      if (Array.isArray(enrData) && enrData.length > 0) {
-        const current = enrData[0].remaining_sessions ?? 0;
-        await fetch(`${SUPABASE_URL}/rest/v1/class_enrollments?id=eq.${enrollmentId}`, {
-          method: 'PATCH',
-          headers: { ...headers, Prefer: 'return=minimal' },
-          body: JSON.stringify({ remaining_sessions: current + 1 }),
-        });
+  // 회차 보정: 완료로 "진입" 시 +1, 완료에서 "이탈" 시 -1, 그 외 0 (idempotent)
+  if (prev && fields.status !== undefined && fields.status !== prev.status) {
+    let delta = 0;
+    if (fields.status === '완료' && prev.status !== '완료') delta = 1;
+    else if (prev.status === '완료' && fields.status !== '완료') delta = -1;
+    if (delta !== 0) {
+      const enrollmentId = await lookupEnrollmentId(prev.student_id, prev.class_id);
+      if (enrollmentId) {
+        const enrRes = await fetch(
+          `${SUPABASE_URL}/rest/v1/class_enrollments?id=eq.${enrollmentId}&select=remaining_sessions`,
+          { headers },
+        );
+        const enrData = await enrRes.json();
+        if (Array.isArray(enrData) && enrData.length > 0) {
+          const current = enrData[0].remaining_sessions ?? 0;
+          await fetch(`${SUPABASE_URL}/rest/v1/class_enrollments?id=eq.${enrollmentId}`, {
+            method: 'PATCH',
+            headers: { ...headers, Prefer: 'return=minimal' },
+            body: JSON.stringify({ remaining_sessions: Math.max(0, current + delta) }),
+          });
+        }
       }
     }
   }
