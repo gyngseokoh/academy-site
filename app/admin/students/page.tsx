@@ -394,7 +394,7 @@ export default function StudentsPage() {
               </button>
             ))}
           </div>
-          <input type="text" value={search} onChange={(e) => setSearch(e.target.value)}
+          <input type="text" value={search} onChange={(e) => { setSearch(e.target.value); setSelected(new Set()); }}
             className="flex-1 md:w-56 border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
             placeholder="이름, 학교, 연락처 검색" />
         </div>

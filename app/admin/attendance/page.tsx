@@ -219,23 +219,11 @@ export default function AttendancePage() {
     if (!confirm(`${marked.length}명의 출결 기록을 삭제(되돌리기)할까요?`)) return;
     setGroupSaving(groupKey);
     const attIds = marked.map((r) => r.attendance_id).join(',');
+    // 회차 정산은 서버가 일원화 처리(출결 +1, 연결된 완료 보충 -1 + 삭제)
     await fetch(`/api/admin/attendance?ids=${attIds}`, { method: 'DELETE' });
-    await Promise.all(marked.map((r) =>
-      r.enrollment_id
-        ? fetch('/api/admin/class-enrollments', {
-            method: 'PATCH', headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ id: r.enrollment_id, remaining_sessions: r.remaining_sessions + 1 }),
-          })
-        : Promise.resolve(),
-    ));
-    const markedKeys = new Set(marked.map((r) => `${r.student_id}_${r.class_id}`));
-    setRows((prev) => prev.map((r) =>
-      markedKeys.has(`${r.student_id}_${r.class_id}`)
-        ? { ...r, status: null, attendance_id: null, remaining_sessions: r.remaining_sessions + 1 }
-        : r,
-    ));
     setGroupSaving(null);
     toast(`${marked.length}명 출결 되돌림`);
+    fetchAttendance();
   };
 
   // 시간대별 그룹핑

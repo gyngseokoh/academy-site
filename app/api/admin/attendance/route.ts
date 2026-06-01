@@ -127,25 +127,57 @@ export async function PATCH(req: NextRequest) {
   return NextResponse.json({ ok: true });
 }
 
-// DELETE /api/admin/attendance?id=xxx  또는  ?ids=a,b,c (일괄)
+// DELETE /api/admin/attendance?id=xxx  또는  ?ids=a,b,c (일괄, 되돌리기)
+// 회차 정산을 서버에서 일원화:
+//  - 삭제한 출결 1건당 +1 (생성 시 차감했던 회차 되돌림)
+//  - 그 출결에 연결된 보충이 '완료'였으면 -1 하고 보충도 삭제(이중 복구/고아 방지)
 export async function DELETE(req: NextRequest) {
   const { searchParams } = new URL(req.url);
   const id = searchParams.get('id');
-  const ids = searchParams.get('ids');
+  const idsParam = searchParams.get('ids');
+  const list = idsParam ? idsParam.split(',').filter(Boolean) : (id ? [id] : []);
+  if (list.length === 0) return NextResponse.json({ error: 'id required' }, { status: 400 });
+  const inList = list.map((i) => `"${i}"`).join(',');
 
-  if (ids) {
-    const list = ids.split(',').filter(Boolean);
-    if (list.length === 0) return NextResponse.json({ ok: true });
-    const inList = list.map((i) => `"${i}"`).join(',');
-    await fetch(`${SUPABASE_URL}/rest/v1/attendance_records?id=in.(${inList})`, {
-      method: 'DELETE', headers,
-    });
-    return NextResponse.json({ ok: true, count: list.length });
+  const [attRes, mkRes] = await Promise.all([
+    fetch(`${SUPABASE_URL}/rest/v1/attendance_records?id=in.(${inList})&select=id,student_id,class_id`, { headers }),
+    fetch(`${SUPABASE_URL}/rest/v1/makeup_classes?attendance_record_id=in.(${inList})&select=id,status,student_id,class_id`, { headers }),
+  ]);
+  const attRows = await attRes.json();
+  const mkRows = await mkRes.json();
+
+  // (student|class)별 회차 보정 델타 계산
+  const delta: Record<string, { student_id: string; class_id: string; d: number }> = {};
+  const bump = (s: string, c: string, n: number) => {
+    if (!s || !c) return;
+    const k = `${s}|${c}`;
+    delta[k] = delta[k] || { student_id: s, class_id: c, d: 0 };
+    delta[k].d += n;
+  };
+  if (Array.isArray(attRows)) attRows.forEach((a: any) => bump(a.student_id, a.class_id, 1));
+  if (Array.isArray(mkRows)) mkRows.forEach((m: any) => { if (m.status === '완료') bump(m.student_id, m.class_id, -1); });
+
+  // 연결된 보충 삭제 + 출결 삭제
+  if (Array.isArray(mkRows) && mkRows.length > 0) {
+    await fetch(`${SUPABASE_URL}/rest/v1/makeup_classes?attendance_record_id=in.(${inList})`, { method: 'DELETE', headers });
   }
+  await fetch(`${SUPABASE_URL}/rest/v1/attendance_records?id=in.(${inList})`, { method: 'DELETE', headers });
 
-  if (!id) return NextResponse.json({ error: 'id required' }, { status: 400 });
-  await fetch(`${SUPABASE_URL}/rest/v1/attendance_records?id=eq.${id}`, {
-    method: 'DELETE', headers,
-  });
-  return NextResponse.json({ ok: true });
+  // 회차 보정 적용
+  await Promise.all(Object.values(delta).map(async ({ student_id, class_id, d }) => {
+    if (d === 0) return;
+    const enr = await fetch(
+      `${SUPABASE_URL}/rest/v1/class_enrollments?student_id=eq.${student_id}&class_id=eq.${class_id}&select=id,remaining_sessions&limit=1`,
+      { headers },
+    );
+    const e = await enr.json();
+    if (!Array.isArray(e) || e.length === 0) return;
+    const next = Math.max(0, (e[0].remaining_sessions ?? 0) + d);
+    await fetch(`${SUPABASE_URL}/rest/v1/class_enrollments?id=eq.${e[0].id}`, {
+      method: 'PATCH', headers: { ...headers, Prefer: 'return=minimal' },
+      body: JSON.stringify({ remaining_sessions: next }),
+    });
+  }));
+
+  return NextResponse.json({ ok: true, count: list.length });
 }
