@@ -86,13 +86,15 @@ export default function ContentPage() {
 
   const handleAboutSave = async () => {
     setAboutSaving(true);
-    await fetch('/api/admin/content/settings', {
+    const res = await fetch('/api/admin/content/settings', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(aboutForm),
     });
     setAboutSaving(false);
-    toast('저장되었습니다');
+    if (res.ok) toast('저장되었습니다');
+    else if (res.status === 401) toast('로그인이 만료됐어요. 로그아웃 후 다시 로그인하고 저장해주세요.', 'error');
+    else toast('저장 실패. 다시 시도해주세요.', 'error');
   };
 
   // 학교분석 저장
@@ -105,7 +107,7 @@ export default function ContentPage() {
 
   const handleSchoolSave = async () => {
     setSchoolSaving(true);
-    await fetch('/api/admin/content/schools', {
+    const res = await fetch('/api/admin/content/schools', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
@@ -115,8 +117,9 @@ export default function ContentPage() {
       }),
     });
     setSchoolSaving(false);
-    fetchItems();
-    toast('저장되었습니다');
+    if (res.ok) { fetchItems(); toast('저장되었습니다'); }
+    else if (res.status === 401) toast('로그인이 만료됐어요. 로그아웃 후 다시 로그인하고 저장해주세요.', 'error');
+    else toast('저장 실패. 다시 시도해주세요.', 'error');
   };
 
   // 일반 항목 저장
