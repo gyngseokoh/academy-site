@@ -73,10 +73,9 @@ export default function ReportsPage() {
   };
 
   const fetchStudents = async () => {
-    const res = await fetch(`${process.env.NEXT_PUBLIC_SUPABASE_URL}/rest/v1/students?select=id,name,grade,school,teacher_id,teachers(id,name)&is_active=neq.false&order=name`,
-      { headers: { apikey: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY! } });
+    const res = await fetch('/api/admin/students');
     const data = await res.json();
-    setStudents(Array.isArray(data) ? data : []);
+    setStudents(Array.isArray(data) ? data.filter((s: any) => s.is_active !== false) : []);
   };
 
   const fetchReports = async () => {

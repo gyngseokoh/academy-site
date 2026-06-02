@@ -12,13 +12,13 @@ export async function GET() {
 
 export async function POST(req: NextRequest) {
   const body = await req.json();
-  const res = await fetch(`${SB_URL}/rest/v1/school_contents`, {
+  const res = await fetch(`${SB_URL}/rest/v1/school_contents?on_conflict=school_slug`, {
     method: 'POST',
     headers: { ...h, Prefer: 'resolution=merge-duplicates,return=representation' },
     body: JSON.stringify({ ...body, updated_at: new Date().toISOString() }),
   });
   const data = await res.json();
-  if (!res.ok) return NextResponse.json({ error: data }, { status: 400 });
+  if (!res.ok) return NextResponse.json({ error: data }, { status: res.status });
   return NextResponse.json(Array.isArray(data) ? data[0] : data);
 }
 

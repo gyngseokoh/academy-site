@@ -77,12 +77,11 @@ export default function MakeupPage() {
 
   const fetchStudentsAndClasses = async () => {
     const [sRes, cRes] = await Promise.all([
-      fetch(`${process.env.NEXT_PUBLIC_SUPABASE_URL}/rest/v1/students?select=id,name,grade&is_active=neq.false&order=name`, {
-        headers: { apikey: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY! },
-      }),
+      fetch('/api/admin/students'),
       fetch('/api/admin/classes'),
     ]);
-    setStudents(await sRes.json());
+    const sData = await sRes.json();
+    setStudents((Array.isArray(sData) ? sData : []).filter((s: any) => s.is_active !== false));
     setClasses(await cRes.json());
   };
 

@@ -55,13 +55,12 @@ export default function ClassesPage() {
       fetch(`${process.env.NEXT_PUBLIC_SUPABASE_URL}/rest/v1/teachers?select=id,name&order=sort_order.asc`, {
         headers: { apikey: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY! },
       }),
-      fetch(`${process.env.NEXT_PUBLIC_SUPABASE_URL}/rest/v1/students?select=id,name,grade&is_active=neq.false&order=name`, {
-        headers: { apikey: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY! },
-      }),
+      fetch('/api/admin/students'),
     ]);
     setClasses(await classRes.json());
     setTeachers(await teacherRes.json());
-    setAllStudents(await studentRes.json());
+    const _sd = await studentRes.json();
+    setAllStudents((Array.isArray(_sd) ? _sd : []).filter((s: any) => s.is_active !== false));
     setSelected(new Set());
     setLoading(false);
   };
