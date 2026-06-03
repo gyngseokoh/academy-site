@@ -64,7 +64,7 @@ export async function GET() {
 
   // 재원생 상담 배정 (대기 중)
   const curConsRes = await fetch(
-    `${SUPABASE_URL}/rest/v1/current_consultations?status=eq.대기&select=id,teacher_id`,
+    `${SUPABASE_URL}/rest/v1/current_student_consultations?status=eq.대기&select=id,teacher_id`,
     { headers: h },
   );
   const curConsPending = await curConsRes.json();

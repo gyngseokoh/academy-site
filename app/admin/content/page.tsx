@@ -94,6 +94,7 @@ export default function ContentPage() {
     setAboutSaving(false);
     if (res.ok) toast('저장되었습니다');
     else if (res.status === 401) toast('로그인이 만료됐어요. 로그아웃 후 다시 로그인하고 저장해주세요.', 'error');
+    else if (res.status === 403) toast('콘텐츠 편집은 원장/부원장만 가능합니다.', 'error');
     else toast('저장 실패. 다시 시도해주세요.', 'error');
   };
 
@@ -119,6 +120,7 @@ export default function ContentPage() {
     setSchoolSaving(false);
     if (res.ok) { fetchItems(); toast('저장되었습니다'); }
     else if (res.status === 401) toast('로그인이 만료됐어요. 로그아웃 후 다시 로그인하고 저장해주세요.', 'error');
+    else if (res.status === 403) toast('콘텐츠 편집은 원장/부원장만 가능합니다.', 'error');
     else toast('저장 실패. 다시 시도해주세요.', 'error');
   };
 
@@ -131,9 +133,10 @@ export default function ContentPage() {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(body),
     });
-    const data = await res.json();
+    const data = await res.json().catch(() => null);
     if (!res.ok) {
-      toast('저장 실패: ' + JSON.stringify(data), 'error');
+      if (res.status === 403) toast('콘텐츠 편집은 원장/부원장만 가능합니다.', 'error');
+      else toast(typeof data?.error === 'string' ? data.error : '저장 실패. 다시 시도해주세요.', 'error');
       return;
     }
     setShowForm(false);
